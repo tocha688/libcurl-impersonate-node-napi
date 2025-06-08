@@ -33,6 +33,31 @@ pub struct Curl {
   content_buffer: UnsafeCell<Vec<u8>>,
 }
 
+// 手动实现 Clone
+impl Clone for Curl {
+  fn clone(&self) -> Self {
+    unsafe {
+      let lib = self.lib;
+      let handle = (lib.easy_init)();
+
+      if handle.is_null() {
+        panic!("Failed to initialize curl handle during clone");
+      }
+
+      // 复制当前的数据
+      let header_data = (*self.header_buffer.get()).clone();
+      let content_data = (*self.content_buffer.get()).clone();
+
+      Curl {
+        lib,
+        handle,
+        header_buffer: UnsafeCell::new(header_data),
+        content_buffer: UnsafeCell::new(content_data),
+      }
+    }
+  }
+}
+
 // UnsafeCell 需要手动实现 Send 和 Sync
 unsafe impl Send for Curl {}
 unsafe impl Sync for Curl {}
@@ -96,7 +121,6 @@ impl Curl {
         CurlOpt::HeaderData as c_int,
         self.header_buffer.get() as *mut c_void,
       );
-
     }
   }
 
@@ -219,7 +243,7 @@ impl Curl {
     }
   }
 
-  /// 重置 curl 
+  /// 重置 curl
   #[napi]
   pub fn reset(&self) {
     unsafe {
@@ -252,5 +276,14 @@ impl Curl {
   /// 获取 curl handle（内部使用）
   pub fn get_handle(&self) -> CurlHandle {
     self.handle
+  }
+}
+
+// 为了安全，实现 Drop trait 来确保资源正确清理
+impl Drop for Curl {
+  fn drop(&mut self) {
+    if !self.handle.is_null() {
+      self.close();
+    }
   }
 }
