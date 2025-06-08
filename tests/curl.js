@@ -12,6 +12,10 @@ curl.setOptString(CurlOpt.Url, "https://tls.peet.ws/api/all")
 curl.setOptLong(CurlOpt.SslVerifyPeer, 0)
 curl.setOptLong(CurlOpt.SslVerifyHost, 0)
 
+curl.impersonate("chrome136", true)
+
+// curl.init()
+
 console.log("Starting request...")
 
 // 执行请求 - 同步等待完成

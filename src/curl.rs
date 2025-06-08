@@ -3,6 +3,7 @@ use napi_derive::napi;
 use std::cell::UnsafeCell;
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
+use crate::constants::CurlImpersonate;
 use crate::{
   constants::{CurlInfo, CurlOpt},
   loader::{napi_load_library, CurlFunctions, CurlHandle},
@@ -24,7 +25,7 @@ extern "C" fn write_data(
   real_size
 }
 
-#[napi(js_name = "Curl")]
+#[napi]
 pub struct Curl {
   handle: CurlHandle,
   lib: &'static CurlFunctions,
@@ -51,12 +52,51 @@ impl Curl {
         ));
       }
 
-      Ok(Curl {
+      let curl = Curl {
         lib,
         handle,
         header_buffer: UnsafeCell::new(Vec::new()),
         content_buffer: UnsafeCell::new(Vec::new()),
-      })
+      };
+
+      Ok(curl)
+    }
+  }
+
+  /// 初始化数据回调
+  #[napi]
+  pub fn init(&self) {
+    unsafe {
+      (*self.header_buffer.get()).clear();
+      (*self.content_buffer.get()).clear();
+      // 设置写入函数
+      (self.lib.easy_setopt)(
+        self.handle,
+        CurlOpt::WriteFunction as c_int,
+        write_data as *const c_void,
+      );
+
+      // 设置响应体数据存储
+      (self.lib.easy_setopt)(
+        self.handle,
+        CurlOpt::WriteData as c_int,
+        self.content_buffer.get() as *mut c_void,
+      );
+
+      // 设置头部写入函数
+      (self.lib.easy_setopt)(
+        self.handle,
+        CurlOpt::HeaderFunction as c_int,
+        write_data as *const c_void,
+      );
+
+      // 设置响应头数据存储
+      (self.lib.easy_setopt)(
+        self.handle,
+        CurlOpt::HeaderData as c_int,
+        self.header_buffer.get() as *mut c_void,
+      );
+
     }
   }
 
@@ -89,6 +129,12 @@ impl Curl {
         if value { 1 } else { 0 } as *const c_void,
       )
     }
+  }
+
+  /// 传入bytes
+  #[napi]
+  pub fn set_opt_bytes(&self, option: CurlOpt, body: Vec<u8>) -> i32 {
+    unsafe { (self.lib.easy_setopt)(self.handle, option as c_int, body.as_ptr() as *const c_void) }
   }
 
   /// 获取响应码
@@ -136,9 +182,17 @@ impl Curl {
 
   /// 模拟浏览器
   #[napi]
-  pub fn impersonate(&self, target: String) -> i32 {
+  pub fn impersonate(&self, target: String, default_headers: Option<bool>) -> i32 {
     let target_cstr = std::ffi::CString::new(target).unwrap();
-    unsafe { (self.lib.easy_impersonate)(self.handle, target_cstr.as_ptr()) }
+    let use_default_headers = default_headers.unwrap_or(true);
+
+    unsafe {
+      (self.lib.easy_impersonate)(
+        self.handle,
+        target_cstr.as_ptr(),
+        if use_default_headers { 1 } else { 0 },
+      )
+    }
   }
 
   /// 获取错误信息字符串
@@ -151,78 +205,52 @@ impl Curl {
     }
   }
 
+  /// 获取curlID
   #[napi]
   pub fn id(&self) -> String {
     format!("0x{:x}", self.handle as usize)
   }
-  //--------------------------
+
   /// 清理 curl handle
   #[napi]
   pub fn close(&self) {
-    self.clear_data();
     unsafe {
       (self.lib.easy_cleanup)(self.handle);
     }
   }
 
-  /// 清除缓冲区数据
+  /// 重置 curl 
   #[napi]
-  pub fn clear_data(&self) {
+  pub fn reset(&self) {
     unsafe {
       (*self.header_buffer.get()).clear();
       (*self.content_buffer.get()).clear();
+      (self.lib.easy_reset)(self.handle);
     }
   }
 
   /// 执行 curl 请求
   #[napi]
   pub fn perform(&self) -> i32 {
-    // 清除之前的数据
-    self.clear_data();
-
-    unsafe {
-      // 设置写入函数
-      (self.lib.easy_setopt)(
-        self.handle,
-        20011, // CURLOPT_WRITEFUNCTION
-        write_data as *const c_void,
-      );
-
-      // 设置响应体数据存储
-      (self.lib.easy_setopt)(
-        self.handle,
-        10001, // CURLOPT_WRITEDATA
-        self.content_buffer.get() as *mut c_void,
-      );
-
-      // 设置头部写入函数
-      (self.lib.easy_setopt)(
-        self.handle,
-        20079, // CURLOPT_HEADERFUNCTION
-        write_data as *const c_void,
-      );
-
-      // 设置响应头数据存储
-      (self.lib.easy_setopt)(
-        self.handle,
-        10029, // CURLOPT_HEADERDATA
-        self.header_buffer.get() as *mut c_void,
-      );
-
-      // 执行请求
-      (self.lib.easy_perform)(self.handle)
-    }
+    // 确保数据回调已初始化
+    self.init();
+    unsafe { (self.lib.easy_perform)(self.handle) }
   }
 
-  /// 获取响应头数据 - 返回字符串
+  /// 获取响应头数据
   #[napi]
   pub fn get_headers(&self) -> Vec<u8> {
     unsafe { (*self.header_buffer.get()).clone() }
   }
 
-  /// 获取响应体数据 - 返回字节数组
+  /// 获取响应体数据
   #[napi]
   pub fn get_body(&self) -> Vec<u8> {
     unsafe { (*self.content_buffer.get()).clone() }
+  }
+
+  /// 获取 curl handle（内部使用）
+  pub fn get_handle(&self) -> CurlHandle {
+    self.handle
   }
 }

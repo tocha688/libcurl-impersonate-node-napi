@@ -605,29 +605,32 @@ export declare function globalCleanup(): void
 export declare function version(): string
 export declare class Curl {
   constructor()
+  /** 初始化数据回调 */
+  init(): void
   /** 设置字符串选项 */
   setOptString(option: CurlOpt, value: string): number
   /** 设置长整型选项 */
   setOptLong(option: CurlOpt, value: number): number
   /** 设置boolean */
   setOptBool(option: CurlOpt, value: boolean): number
+  /** 传入bytes */
+  setOptBytes(option: CurlOpt, body: Array<number>): number
   /** 获取响应码 */
   getInfoNumber(option: CurlInfo): number
   /** 获取字符串信息 */
   getInfoString(option: CurlInfo): string
   /** 模拟浏览器 */
-  impersonate(target: string): number
+  impersonate(target: string, defaultHeaders?: boolean | undefined | null): number
   /** 获取错误信息字符串 */
   error(code: number): string
   id(): string
   /** 清理 curl handle */
   close(): void
-  /** 清除缓冲区数据 */
-  clearData(): void
+  reset(): void
   /** 执行 curl 请求 */
   perform(): number
-  /** 获取响应头数据 - 返回字符串 */
+  /** 获取响应头数据 */
   getHeaders(): Array<number>
-  /** 获取响应体数据 - 返回字节数组 */
+  /** 获取响应体数据 */
   getBody(): Array<number>
 }

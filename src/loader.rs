@@ -58,7 +58,7 @@ pub type CurlEasyReset = unsafe extern "C" fn(handle: CurlHandle);
 pub type CurlEasyStrerror = unsafe extern "C" fn(code: c_int) -> *const c_char;
 // 添加 impersonate 函数类型
 pub type CurlEasyImpersonate =
-  unsafe extern "C" fn(handle: CurlHandle, target: *const c_char) -> c_int;
+  unsafe extern "C" fn(handle: CurlHandle, target: *const c_char, default_headers: c_int) -> c_int;
 
 // Multi interface 函数类型
 pub type CurlMultiInit = unsafe extern "C" fn() -> CurlMultiHandle;
