@@ -1,0 +1,21 @@
+{
+  "name": "curl-impersonate-linux-riscv64-gnu",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "riscv64"
+  ],
+  "main": "curl-impersonate.linux-riscv64-gnu.node",
+  "files": [
+    "curl-impersonate.linux-riscv64-gnu.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  },
+  "libc": [
+    "glibc"
+  ]
+}
