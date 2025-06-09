@@ -13,6 +13,15 @@ curl.setOptLong(CurlOpt.SslVerifyPeer, 0)
 curl.setOptLong(CurlOpt.SslVerifyHost, 0)
 
 curl.impersonate("chrome136", true)
+curl.addHeader("h1","w1")
+curl.addHeader("h2","w1")
+// curl.setHeaders([
+//   "h1: v1",
+//   "h2: v2",
+//   "h3: v3",
+//   "h4: v4",
+//   "h5: v5",
+// ])
 
 // curl.init()
 
@@ -27,9 +36,9 @@ console.log("Response Code:", curl.getInfoNumber(CurlInfo.ResponseCode))
 
 // 直接获取完整的数据
 console.log("\n=== Headers ===")
-console.log(Buffer.from(curl.getHeaders()).toString("utf8"))
+console.log(Buffer.from(curl.getRespHeaders()).toString("utf8"))
 
 console.log("\n=== Body ===")
-console.log(Buffer.from(curl.getBody()).toString("utf8"))
+console.log(Buffer.from(curl.getRespBody()).toString("utf8"))
 
 curl.close()

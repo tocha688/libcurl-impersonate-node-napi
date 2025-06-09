@@ -601,12 +601,20 @@ export const enum CurlImpersonate {
 export declare function globalInit(flags: number): number
 /** 全局清理 */
 export declare function globalCleanup(): void
-/** 获取 curl 版本信息 */
-export declare function version(): string
+/** 获取 libcurl 版本信息 */
+export declare function getVersion(): string
 export declare class Curl {
   constructor()
   /** 初始化数据回调 */
   init(): void
+  /** 设置单个 HTTP 头 */
+  addHeader(name: string, value: string): void
+  /** 设置原始 HTTP 头 */
+  addHeaderRaw(header: string): void
+  setHeaders(headers: Record<string, string>): void
+  setHeadersRaw(headers: Array<string>): void
+  /** 清理所有 HTTP 头 */
+  clearHeaders(): void
   /** 设置字符串选项 */
   setOptString(option: CurlOpt, value: string): number
   /** 设置长整型选项 */
@@ -623,14 +631,16 @@ export declare class Curl {
   impersonate(target: string, defaultHeaders?: boolean | undefined | null): number
   /** 获取错误信息字符串 */
   error(code: number): string
+  /** 获取curlID */
   id(): string
   /** 清理 curl handle */
   close(): void
+  /** 重置 curl */
   reset(): void
   /** 执行 curl 请求 */
   perform(): number
   /** 获取响应头数据 */
-  getHeaders(): Array<number>
+  getRespHeaders(): Array<number>
   /** 获取响应体数据 */
-  getBody(): Array<number>
+  getRespBody(): Array<number>
 }
