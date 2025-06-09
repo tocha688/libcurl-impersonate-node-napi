@@ -64,7 +64,7 @@ multi.send(curl2, (result) => {
 
 console.log("Requests started, waiting for completion...")
 
-// 持续调用 perform 来驱动请求完成
+// // 持续调用 perform 来驱动请求完成
 // const performInterval = setInterval(() => {
 //     try {
 //         const remaining = multi.perform()

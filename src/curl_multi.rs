@@ -88,11 +88,23 @@ impl Multi {
     let multi = Multi {
       raw: Arc::new(RawMulti { handle, lib }),
       data: Arc::new(Mutex::new(MultiData {
-        socket: Box::new(|_socket, _events, _token| {}),
-        timer: Box::new(|_timeout| true),
+        socket: Box::new(|socket, events, _token| {
+          println!("Default socket callback: socket={}, events={:?}", socket, events.bits);
+        }),
+        timer: Box::new(|timeout| {
+          if let Some(duration) = timeout {
+            println!("Default timer callback: timeout={}ms", duration.as_millis());
+          } else {
+            println!("Default timer callback: no timeout");
+          }
+          true
+        }),
         curl_callbacks: HashMap::new(),
       })),
     };
+
+    // 设置默认的 socket 和 timer 回调函数
+    multi.setup_default_callbacks()?;
 
     Ok(multi)
   }
@@ -160,14 +172,14 @@ impl Multi {
     error_callback: Option<JsFunction>,
   ) -> Result<()> {
     let handle_addr = curl.get_handle();
-    let handle_key = format!("{:p}", handle_addr);
+    let handle_key = get_ptr_address(handle_addr);
     println!("perform_async called for curl: {}", handle_key);
 
     if handle_addr.is_null() {
       return Err(Error::from_reason("Curl handle is null"));
     }
 
-    // 不要调用 curl.init()，这会重置设置
+    // 并不会重置,这只是设置header和response的buffer指针
     curl.init();
 
     let success_tsfn = env.create_threadsafe_function(&success_callback, 0, |ctx| {
@@ -209,7 +221,7 @@ impl Multi {
     }
 
     self.perform()?;
-
+    
     println!("Handle added successfully for curl: {}", handle_key);
 
     Ok(())
@@ -320,6 +332,52 @@ impl Multi {
       }
     }
   }
+
+  /// 设置默认回调函数
+  fn setup_default_callbacks(&self) -> Result<()> {
+    unsafe {
+      // 设置 socket 回调
+      let result = (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::SocketFunction as c_int,
+        socket_callback as *const c_void,
+      );
+      if result != 0 {
+        return Err(Error::from_reason("Failed to set socket function"));
+      }
+
+      let ptr = Arc::into_raw(self.data.clone()) as *const c_void;
+      let result = (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::SocketData as c_int,
+        ptr,
+      );
+      if result != 0 {
+        return Err(Error::from_reason("Failed to set socket data"));
+      }
+
+      // 设置 timer 回调
+      let result = (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::TimerFunction as c_int,
+        timer_callback as *const c_void,
+      );
+      if result != 0 {
+        return Err(Error::from_reason("Failed to set timer function"));
+      }
+
+      let result = (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::TimerData as c_int,
+        ptr,
+      );
+      if result != 0 {
+        return Err(Error::from_reason("Failed to set timer data"));
+      }
+    }
+
+    Ok(())
+  }
 }
 
 // 非 napi 方法的实现
@@ -336,24 +394,6 @@ impl Multi {
     if let Ok(mut data) = self.data.lock() {
       data.socket = f;
     }
-
-    unsafe {
-      let result = (self.raw.lib.multi_setopt)(
-        self.raw.handle,
-        CurlMOpt::SocketFunction as c_int,
-        socket_callback as *const c_void,
-      );
-      if result != 0 {
-        return Err(Error::from_reason("Failed to set socket function"));
-      }
-
-      let ptr = Arc::into_raw(self.data.clone()) as *const c_void;
-      let result = (self.raw.lib.multi_setopt)(self.raw.handle, CurlMOpt::SocketData as c_int, ptr);
-      if result != 0 {
-        return Err(Error::from_reason("Failed to set socket data"));
-      }
-    }
-
     Ok(())
   }
 
@@ -372,24 +412,6 @@ impl Multi {
     if let Ok(mut data) = self.data.lock() {
       data.timer = f;
     }
-
-    unsafe {
-      let result = (self.raw.lib.multi_setopt)(
-        self.raw.handle,
-        CurlMOpt::TimerFunction as c_int,
-        timer_callback as *const c_void,
-      );
-      if result != 0 {
-        return Err(Error::from_reason("Failed to set timer function"));
-      }
-
-      let ptr = Arc::into_raw(self.data.clone()) as *const c_void;
-      let result = (self.raw.lib.multi_setopt)(self.raw.handle, CurlMOpt::TimerData as c_int, ptr);
-      if result != 0 {
-        return Err(Error::from_reason("Failed to set timer data"));
-      }
-    }
-
     Ok(())
   }
 
@@ -533,10 +555,10 @@ extern "C" fn socket_callback(
 
   if let Ok(mut data) = data_arc.try_lock() {
     let events = SocketEvents { bits: what };
-    // 修正：使用括号调用 trait object
     (data.socket)(socket, events, 0);
   }
 
+  // 重要：不要忘记这个，否则会内存泄漏
   std::mem::forget(data_arc);
 
   0
@@ -562,12 +584,12 @@ extern "C" fn timer_callback(
     } else {
       Some(std::time::Duration::from_millis(timeout_ms as u64))
     };
-    // 修正：使用括号调用 trait object
     (data.timer)(timeout)
   } else {
     false
   };
 
+  // 重要：不要忘记这个，否则会内存泄漏
   std::mem::forget(data_arc);
 
   if keep_going {
