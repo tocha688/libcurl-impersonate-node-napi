@@ -14,7 +14,7 @@ pub type CurlMimepart = *mut std::ffi::c_void;
 pub type CurlShare = *mut std::ffi::c_void;
 pub type CurlUrl = *mut std::ffi::c_void;
 pub type CurlForm = *mut std::ffi::c_void;
-pub type CurlHttpPost = *mut std::ffi::c_void;
+pub type CurlHttpPost = *mut c_void;
 
 // 存储加载的函数实例
 static CURL_FUNCTIONS: OnceCell<CurlFunctions> = OnceCell::new();
@@ -333,7 +333,7 @@ pub type CurlPushheaderByname =
 pub type CurlPushheaderBynum = unsafe extern "C" fn(h: *mut c_void, num: usize) -> *mut c_char;
 
 // 存储所有加载的函数 - 完整版本
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CurlFunctions {
   // Easy interface - 完整版本
   pub easy_init: Symbol<'static, CurlEasyInit>,
@@ -463,6 +463,19 @@ pub struct CurlFunctions {
 // 实现 Send 和 Sync trait
 unsafe impl Send for CurlFunctions {}
 unsafe impl Sync for CurlFunctions {}
+
+#[repr(C)]
+pub struct CurlMsg {
+  pub msg: c_int,
+  pub easy_handle: CurlHandle,
+  pub data: CurlMsgData,
+}
+
+#[repr(C)]
+pub union CurlMsgData {
+  pub whatever: *mut c_void,
+  pub result: c_int,
+}
 
 // 加载lib方法
 pub fn load_curl_library() -> Result<&'static CurlFunctions, Box<dyn std::error::Error>> {

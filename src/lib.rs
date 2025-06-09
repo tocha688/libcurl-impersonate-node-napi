@@ -5,5 +5,6 @@ pub mod loader;
 pub mod constants;
 pub mod curl;
 pub mod api;
-// pub mod curl_multi;
+pub mod utils;
+pub mod curl_multi;
 // pub mod curl_multi_task;

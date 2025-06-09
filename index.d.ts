@@ -633,6 +633,8 @@ export declare class Curl {
   error(code: number): string
   /** 获取curlID */
   id(): string
+  /** 检查 handle 是否有效 */
+  isValid(): boolean
   /** 清理 curl handle */
   close(): void
   /** 重置 curl */
@@ -643,4 +645,27 @@ export declare class Curl {
   getRespHeaders(): Array<number>
   /** 获取响应体数据 */
   getRespBody(): Array<number>
+}
+export declare class SocketEvents {
+  constructor()
+  input(val: boolean): void
+  output(val: boolean): void
+  error(val: boolean): void
+}
+export type Multi = CurlMulti
+export declare class CurlMulti {
+  /** Creates a new multi session through which multiple HTTP transfers can be initiated. */
+  constructor()
+  /** Inform of reads/writes available data given an action */
+  action(socket: Socket, events: SocketEvents): number
+  /** Inform libcurl that a timeout has expired */
+  timeout(): number
+  /** Reads/writes available data from each easy handle */
+  perform(): number
+  /** 异步执行单个请求 */
+  send(curl: Curl, successCallback: (...args: any[]) => any, errorCallback?: (...args: any[]) => any | undefined | null): void
+  /** Get a pointer to the raw underlying CURLM handle */
+  raw(): number
+  /** 获取错误信息 */
+  error(err: number): string
 }

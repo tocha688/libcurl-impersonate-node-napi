@@ -4,7 +4,7 @@ use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
-use crate::constants::CurlImpersonate;
+use crate::utils::get_ptr_address;
 use crate::{
   constants::{CurlInfo, CurlOpt},
   loader::{napi_load_library, CurlFunctions, CurlHandle, CurlSlist},
@@ -35,23 +35,31 @@ pub struct Curl {
   headers_list: UnsafeCell<Option<CurlSlist>>, // 添加 headers 列表管理
 }
 
-// 手动实现 Clone
+// 手动实现 Clone - 修正版本
 impl Clone for Curl {
   fn clone(&self) -> Self {
     unsafe {
       let lib = self.lib;
 
+      // 创建新的 curl handle，而不是复制指针
+      let new_handle = (lib.easy_init)();
+      if new_handle.is_null() {
+        panic!("Failed to create new curl handle in clone");
+      }
+
       // 复制当前的数据
       let header_data = (*self.header_buffer.get()).clone();
       let content_data = (*self.content_buffer.get()).clone();
 
-      Curl {
+      let new_curl = Curl {
         lib,
-        handle: self.handle,
+        handle: new_handle,
         header_buffer: UnsafeCell::new(header_data),
         content_buffer: UnsafeCell::new(content_data),
         headers_list: UnsafeCell::new(None), // 新实例不复制 headers 列表
-      }
+      };
+
+      new_curl
     }
   }
 }
@@ -318,7 +326,21 @@ impl Curl {
   /// 获取curlID
   #[napi]
   pub fn id(&self) -> String {
-    format!("0x{:x}", self.handle as usize)
+    get_ptr_address(self.handle)
+  }
+
+  /// 获取 curl handle（内部使用）- 添加安全检查
+  pub fn get_handle(&self) -> CurlHandle {
+    if self.handle.is_null() {
+      println!("Warning: curl handle is null!");
+    }
+    self.handle
+  }
+
+  /// 检查 handle 是否有效
+  #[napi]
+  pub fn is_valid(&self) -> bool {
+    !self.handle.is_null()
   }
 
   /// 清理 curl handle
@@ -364,11 +386,6 @@ impl Curl {
   #[napi]
   pub fn get_resp_body(&self) -> Vec<u8> {
     unsafe { (*self.content_buffer.get()).clone() }
-  }
-
-  /// 获取 curl handle（内部使用）
-  pub fn get_handle(&self) -> CurlHandle {
-    self.handle
   }
 }
 

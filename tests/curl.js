@@ -41,4 +41,8 @@ console.log(Buffer.from(curl.getRespHeaders()).toString("utf8"))
 console.log("\n=== Body ===")
 console.log(Buffer.from(curl.getRespBody()).toString("utf8"))
 
+// curl.reset();
+
 curl.close()
+
+console.log("Curl instance closed.")
