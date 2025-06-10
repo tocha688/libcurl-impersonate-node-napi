@@ -603,6 +603,15 @@ export declare function globalInit(flags: number): number
 export declare function globalCleanup(): void
 /** 获取 libcurl 版本信息 */
 export declare function getVersion(): string
+export interface CurlMsgResult {
+  msg: number
+  easyHandle: number
+  data: CurlMsgDataResult
+}
+export interface CurlMsgDataResult {
+  whatever: number
+  result: number
+}
 export declare class Curl {
   constructor()
   /** 初始化数据回调 */
@@ -668,4 +677,20 @@ export declare class CurlMulti {
   raw(): number
   /** 获取错误信息 */
   error(err: number): string
+}
+export type CurlMulti = CurlMulti2
+export declare class CurlMulti2 {
+  constructor()
+  /** 设置 Socket 回调函数 */
+  setSocketCallback(callback: (err: null | Error, result: {curl_id:string,socket:number,what:number}) => void): void
+  /** 设置 Timer 回调函数 */
+  setTimerCallback(callback: (err: null | Error, result: {multi_id:string,timeout_ms:number}) => void): void
+  addHandle(curl: Curl): number
+  removeHandle(curl: Curl): number
+  /** 获取错误信息 */
+  error(err: number): string
+  perform(): number
+  socketAction(socket: Socket, what: c_int): number
+  infoRead(): CurlMsgResult
+  close(): void
 }
