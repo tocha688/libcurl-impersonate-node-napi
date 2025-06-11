@@ -33,47 +33,35 @@ function checkComplete() {
 const CURL_SOCKET_TIMEOUT = -1;
 multi.setSocketCallback((err, data) => {
     console.log(`Socket Callback`, data)
-    // multi.socketAction(data.socket, data.what)
-    onComplete(data.socket, data.what)
 })
 multi.setTimerCallback((err, data) => {
     console.log(`Timer Callback`, data)
-    setTimeout(() => {
-        onComplete(CURL_SOCKET_TIMEOUT, 0)
-    }, data.timeout_ms)
 })
-function onComplete(socket, what) {
-    let r = multi.socketAction(socket, what)
-    console.log("socketAction", r)
-    //检查
-    try {
-        let data = multi.infoRead()
-        console.lo("Info Read:", data)
-    } catch (e) {
-        console.error("Error reading info:", e.message)
-    }
-}
-multi.addHandle(curl)
-multi.perform()
 
+console.log("Adding curl handle...")
+multi.addHandle(curl)
+
+console.log("Starting initial perform...")
+let remaining = multi.perform()
+console.log(`Initial perform result: ${remaining} transfers remaining`)
 
 console.log("Requests started, waiting for completion...")
 
-// // // 持续调用 perform 来驱动请求完成
-// const performInterval = setInterval(() => {
-//     try {
-//         const remaining = multi.perform()
-//         console.log(`Remaining transfers: ${remaining}`)
+// 持续调用 perform 来驱动请求完成
+const performInterval = setInterval(() => {
+    try {
+        const prevRemaining = remaining
+        remaining = multi.perform()
+        console.log(`Perform: ${remaining} transfers remaining (was ${prevRemaining})`)
 
-//         if (remaining === 0) {
-//             console.log("No more transfers, stopping interval")
-//             clearInterval(performInterval)
-//         }
-//     } catch (error) {
-//         console.error("Error in perform:", error)
-//         clearInterval(performInterval)
-//     }
-// }, 100) // 每100ms调用一次
+         //获取信息
+         const info = multi.infoRead()
+         console.log("Info Read:", info)
+    } catch (error) {
+        console.error("Error in perform:", error)
+        clearInterval(performInterval)
+    }
+}, 100) // 每100ms调用一次
 
 // 30秒超时
 // setTimeout(() => {

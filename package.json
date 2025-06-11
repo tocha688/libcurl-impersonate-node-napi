@@ -1,8 +1,10 @@
 {
   "name": "curl-impersonate",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "index.js",
   "types": "index.d.ts",
+  "author": "tocha688",
+  "homepage": "",
   "napi": {
     "name": "curl-impersonate",
     "triples": {

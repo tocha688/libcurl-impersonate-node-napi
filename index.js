@@ -310,7 +310,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { setLibPath, getLibPath, CurlOpt, CurlInfo, CurlMOpt, CurlError, CurlHttpVersion, CurlWsFlag, CurlSslVersion, UrlIpResolve, CurlImpersonate, Curl, globalInit, globalCleanup, getVersion, SocketEvents, CurlMulti, CurlMulti2 } = nativeBinding
+const { setLibPath, getLibPath, CurlOpt, CurlInfo, CurlMOpt, CurlError, CurlHttpVersion, CurlWsFlag, CurlSslVersion, UrlIpResolve, CurlImpersonate, Curl, globalInit, globalCleanup, getVersion, CurlMulti2 } = nativeBinding
 
 module.exports.setLibPath = setLibPath
 module.exports.getLibPath = getLibPath
@@ -327,6 +327,4 @@ module.exports.Curl = Curl
 module.exports.globalInit = globalInit
 module.exports.globalCleanup = globalCleanup
 module.exports.getVersion = getVersion
-module.exports.SocketEvents = SocketEvents
-module.exports.CurlMulti = CurlMulti
 module.exports.CurlMulti2 = CurlMulti2

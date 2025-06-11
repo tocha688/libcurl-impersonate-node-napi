@@ -153,7 +153,7 @@ pub type CurlMultiAddHandle =
 pub type CurlMultiRemoveHandle =
   unsafe extern "C" fn(multi_handle: CurlMultiHandle, easy_handle: CurlHandle) -> c_int;
 pub type CurlMultiInfoRead =
-  unsafe extern "C" fn(multi_handle: CurlMultiHandle, msgs_in_queue: *mut c_int) -> *mut c_void;
+  unsafe extern "C" fn(multi_handle: CurlMultiHandle, msgs_in_queue: *mut c_int) -> *mut CurlMsg;
 pub type CurlMultiSetopt =
   unsafe extern "C" fn(multi_handle: CurlMultiHandle, option: c_int, value: *const c_void) -> c_int;
 pub type CurlMultiStrerror = unsafe extern "C" fn(code: c_int) -> *const c_char;
@@ -467,7 +467,7 @@ unsafe impl Sync for CurlFunctions {}
 #[repr(C)]
 pub struct CurlMsg {
   pub msg: c_int,
-  pub easy_handle: CurlHandle,
+  pub easy_handle: *mut c_void, // 修正：这应该是 void* 而不是 CurlHandle
   pub data: CurlMsgData,
 }
 

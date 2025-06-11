@@ -606,6 +606,7 @@ export declare function getVersion(): string
 export interface CurlMsgResult {
   msg: number
   easyHandle: number
+  easyId: string
   data: CurlMsgDataResult
 }
 export interface CurlMsgDataResult {
@@ -655,42 +656,17 @@ export declare class Curl {
   /** 获取响应体数据 */
   getRespBody(): Array<number>
 }
-export declare class SocketEvents {
-  constructor()
-  input(val: boolean): void
-  output(val: boolean): void
-  error(val: boolean): void
-}
-export type Multi = CurlMulti
-export declare class CurlMulti {
-  /** Creates a new multi session through which multiple HTTP transfers can be initiated. */
-  constructor()
-  /** Inform of reads/writes available data given an action */
-  action(socket: Socket, events: SocketEvents): number
-  /** Inform libcurl that a timeout has expired */
-  timeout(): number
-  /** Reads/writes available data from each easy handle */
-  perform(): number
-  /** 异步执行单个请求 */
-  send(curl: Curl, successCallback: (...args: any[]) => any, errorCallback?: (...args: any[]) => any | undefined | null): void
-  /** Get a pointer to the raw underlying CURLM handle */
-  raw(): number
-  /** 获取错误信息 */
-  error(err: number): string
-}
 export type CurlMulti = CurlMulti2
 export declare class CurlMulti2 {
   constructor()
-  /** 设置 Socket 回调函数 */
   setSocketCallback(callback: (err: null | Error, result: {curl_id:string,socket:number,what:number}) => void): void
-  /** 设置 Timer 回调函数 */
   setTimerCallback(callback: (err: null | Error, result: {multi_id:string,timeout_ms:number}) => void): void
   addHandle(curl: Curl): number
   removeHandle(curl: Curl): number
-  /** 获取错误信息 */
   error(err: number): string
   perform(): number
-  socketAction(socket: Socket, what: c_int): number
-  infoRead(): CurlMsgResult
+  getRunningHandles(): number
+  socketAction(socket: c_int, what: c_int): number
+  infoRead(): CurlMsgResult | null
   close(): void
 }
