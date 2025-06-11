@@ -1,3 +1,3 @@
-# `curl-impersonate-darwin-x64`
+# `-darwin-x64`
 
-This is the **x86_64-apple-darwin** binary for `curl-impersonate`
+This is the **x86_64-apple-darwin** binary for ``

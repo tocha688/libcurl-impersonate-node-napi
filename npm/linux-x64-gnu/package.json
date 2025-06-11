@@ -1,6 +1,6 @@
 {
-  "name": "curl-impersonate-linux-x64-gnu",
-  "version": "0.0.0",
+  "name": "-linux-x64-gnu",
+  "version": "0.0.1",
   "os": [
     "linux"
   ],
@@ -11,9 +11,16 @@
   "files": [
     "curl-impersonate.linux-x64-gnu.node"
   ],
+  "description": "curl-impersonate napi",
+  "author": "tocha688",
+  "homepage": "https://github.com/tocha688/libcurl-impersonate-node-napi#readme",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "bugs": {
+    "url": "https://github.com/tocha688/libcurl-impersonate-node-napi/issues"
   },
   "libc": [
     "glibc"

@@ -1,6 +1,6 @@
 {
-  "name": "curl-impersonate-win32-ia32-msvc",
-  "version": "0.0.0",
+  "name": "-win32-ia32-msvc",
+  "version": "0.0.1",
   "os": [
     "win32"
   ],
@@ -11,8 +11,15 @@
   "files": [
     "curl-impersonate.win32-ia32-msvc.node"
   ],
+  "description": "curl-impersonate napi",
+  "author": "tocha688",
+  "homepage": "https://github.com/tocha688/libcurl-impersonate-node-napi#readme",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "bugs": {
+    "url": "https://github.com/tocha688/libcurl-impersonate-node-napi/issues"
   }
 }

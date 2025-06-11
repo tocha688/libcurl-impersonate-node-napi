@@ -1,3 +1,3 @@
-# `curl-impersonate-linux-arm64-musl`
+# `-linux-arm64-musl`
 
-This is the **aarch64-unknown-linux-musl** binary for `curl-impersonate`
+This is the **aarch64-unknown-linux-musl** binary for ``

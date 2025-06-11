@@ -1,3 +1,3 @@
-# `curl-impersonate-darwin-universal`
+# `-darwin-universal`
 
-This is the **universal-apple-darwin** binary for `curl-impersonate`
+This is the **universal-apple-darwin** binary for ``

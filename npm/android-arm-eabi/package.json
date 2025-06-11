@@ -1,6 +1,6 @@
 {
-  "name": "curl-impersonate-android-arm-eabi",
-  "version": "0.0.0",
+  "name": "-android-arm-eabi",
+  "version": "0.0.1",
   "os": [
     "android"
   ],
@@ -11,8 +11,15 @@
   "files": [
     "curl-impersonate.android-arm-eabi.node"
   ],
+  "description": "curl-impersonate napi",
+  "author": "tocha688",
+  "homepage": "https://github.com/tocha688/libcurl-impersonate-node-napi#readme",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "bugs": {
+    "url": "https://github.com/tocha688/libcurl-impersonate-node-napi/issues"
   }
 }
