@@ -37,7 +37,7 @@ pub struct SocketData {
 
 pub struct TimerData {
   pub multi_id: String,
-  pub timeout_ms: i32,
+  pub timeout_ms: i64,
 }
 
 #[derive(Debug)]
@@ -317,7 +317,7 @@ extern "C" fn timer_callback(
   let keep_going = if let Ok(mut data) = data_arc.try_lock() {
     (data.timer)(TimerData {
       multi_id: get_ptr_address(_multi),
-      timeout_ms,
+      timeout_ms:timeout_ms as i64,
     })
   } else {
     false
