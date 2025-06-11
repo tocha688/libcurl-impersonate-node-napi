@@ -589,7 +589,7 @@ pub enum CurlSslVersion {
 // IP 解析常量
 #[repr(u32)]
 #[napi]
-pub enum UrlIpResolve {
+pub enum CurlIpResolve {
     Whatever = 0,
     V4 = 1,
     V6 = 2,
