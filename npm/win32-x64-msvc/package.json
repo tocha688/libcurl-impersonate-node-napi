@@ -11,10 +11,8 @@
   "files": [
     "libcurl.win32-x64-msvc.node"
   ],
-  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  },
-  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi"
+  }
 }

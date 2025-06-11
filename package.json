@@ -5,22 +5,7 @@
   "types": "index.d.ts",
   "napi": {
     "name": "libcurl",
-    "triples": {
-      "additional": [
-        "aarch64-apple-darwin",
-        "aarch64-linux-android",
-        "aarch64-unknown-linux-gnu",
-        "aarch64-unknown-linux-musl",
-        "aarch64-pc-windows-msvc",
-        "armv7-unknown-linux-gnueabihf",
-        "armv7-unknown-linux-musleabihf",
-        "x86_64-unknown-linux-musl",
-        "x86_64-unknown-freebsd",
-        "i686-pc-windows-msvc",
-        "armv7-linux-androideabi",
-        "riscv64gc-unknown-linux-gnu"
-      ]
-    }
+    "triples": {}
   },
   "license": "MIT",
   "devDependencies": {
@@ -41,25 +26,5 @@
     "test": "ava",
     "universal": "napi universal",
     "version": "napi version"
-  },
-  "packageManager": "yarn@4.9.2",
-  "optionalDependencies": {
-    "@tocha688/libcurl-win32-x64-msvc": "0.0.0",
-    "@tocha688/libcurl-darwin-x64": "0.0.0",
-    "@tocha688/libcurl-linux-x64-gnu": "0.0.0",
-    "@tocha688/libcurl-darwin-arm64": "0.0.0",
-    "@tocha688/libcurl-android-arm64": "0.0.0",
-    "@tocha688/libcurl-linux-arm64-gnu": "0.0.0",
-    "@tocha688/libcurl-linux-arm64-musl": "0.0.0",
-    "@tocha688/libcurl-win32-arm64-msvc": "0.0.0",
-    "@tocha688/libcurl-linux-arm-gnueabihf": "0.0.0",
-    "@tocha688/libcurl-linux-arm-musleabihf": "0.0.0",
-    "@tocha688/libcurl-linux-x64-musl": "0.0.0",
-    "@tocha688/libcurl-freebsd-x64": "0.0.0",
-    "@tocha688/libcurl-win32-ia32-msvc": "0.0.0",
-    "@tocha688/libcurl-android-arm-eabi": "0.0.0",
-    "@tocha688/libcurl-linux-riscv64-gnu": "0.0.0"
-  },
-  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi",
-  "description": "@tocha688/libcurl for node"
+  }
 }
