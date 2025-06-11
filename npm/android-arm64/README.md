@@ -1,3 +1,3 @@
-# `-android-arm64`
+# `curl-impersonate-android-arm64`
 
-This is the **aarch64-linux-android** binary for ``
+This is the **aarch64-linux-android** binary for `curl-impersonate`

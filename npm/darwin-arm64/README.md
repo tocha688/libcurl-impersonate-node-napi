@@ -1,3 +1,3 @@
-# `-darwin-arm64`
+# `curl-impersonate-darwin-arm64`
 
-This is the **aarch64-apple-darwin** binary for ``
+This is the **aarch64-apple-darwin** binary for `curl-impersonate`

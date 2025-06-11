@@ -1,3 +1,3 @@
-# `-linux-x64-gnu`
+# `curl-impersonate-linux-x64-gnu`
 
-This is the **x86_64-unknown-linux-gnu** binary for ``
+This is the **x86_64-unknown-linux-gnu** binary for `curl-impersonate`

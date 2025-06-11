@@ -1,6 +1,6 @@
 {
-  "name": "-linux-arm-gnueabihf",
-  "version": "0.0.1",
+  "name": "curl-impersonate-linux-arm-gnueabihf",
+  "version": "0.0.0",
   "os": [
     "linux"
   ],
@@ -11,15 +11,8 @@
   "files": [
     "curl-impersonate.linux-arm-gnueabihf.node"
   ],
-  "description": "curl-impersonate napi",
-  "author": "tocha688",
-  "homepage": "https://github.com/tocha688/libcurl-impersonate-node-napi#readme",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
-  "bugs": {
-    "url": "https://github.com/tocha688/libcurl-impersonate-node-napi/issues"
   }
 }
