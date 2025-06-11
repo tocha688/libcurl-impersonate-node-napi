@@ -11,7 +11,7 @@ use napi_derive::napi;
 use crate::{
   constants::CurlMOpt,
   curl::Curl,
-  loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMsg, CurlMultiHandle},
+  loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle},
   utils::get_ptr_address,
 };
 
