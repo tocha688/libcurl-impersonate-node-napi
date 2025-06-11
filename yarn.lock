@@ -111,6 +111,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tocha688/libcurl@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@tocha688/libcurl@workspace:."
+  dependencies:
+    "@napi-rs/cli": "npm:^2.18.4"
+    ava: "npm:^6.0.1"
+  languageName: unknown
+  linkType: soft
+
 "@types/estree@npm:^1.0.0":
   version: 1.0.8
   resolution: "@types/estree@npm:1.0.8"
@@ -488,15 +497,6 @@ __metadata:
   checksum: 10c0/053ea8b2135caff68a9e81470e845613e374e7309a47731e81639de3eaeb90c3d01af0e0b44d2ab9d50b43467223b88567dfeb3262db942dc063b9976718ffc1
   languageName: node
   linkType: hard
-
-"@tocha688/libcurl@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@tocha688/libcurl@workspace:."
-  dependencies:
-    "@napi-rs/cli": "npm:^2.18.4"
-    ava: "npm:^6.0.1"
-  languageName: unknown
-  linkType: soft
 
 "currently-unhandled@npm:^0.4.1":
   version: 0.4.1
