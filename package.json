@@ -8,7 +8,10 @@
     "index.js",
     "index.d.ts"
   ],
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tocha688/libcurl-impersonate-node-napi.git"
+  },
   "napi": {
     "name": "libcurl",
     "triples": {

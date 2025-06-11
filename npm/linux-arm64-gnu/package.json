@@ -16,7 +16,10 @@
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tocha688/libcurl-impersonate-node-napi.git"
+  },
   "libc": [
     "glibc"
   ]
