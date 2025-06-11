@@ -1,15 +1,15 @@
 {
-  "name": "@tocha688/libcurl-linux-x64-gnu",
+  "name": "@tocha688/libcurl-linux-riscv64-gnu",
   "version": "0.0.0",
   "os": [
     "linux"
   ],
   "cpu": [
-    "x64"
+    "riscv64"
   ],
-  "main": "libcurl.linux-x64-gnu.node",
+  "main": "libcurl.linux-riscv64-gnu.node",
   "files": [
-    "libcurl.linux-x64-gnu.node"
+    "libcurl.linux-riscv64-gnu.node"
   ],
   "license": "MIT",
   "engines": {

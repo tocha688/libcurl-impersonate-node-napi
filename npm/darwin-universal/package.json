@@ -1,0 +1,15 @@
+{
+  "name": "@tocha688/libcurl-darwin-universal",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "main": "libcurl.darwin-universal.node",
+  "files": [
+    "libcurl.darwin-universal.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}

@@ -1,15 +1,15 @@
 {
-  "name": "@tocha688/libcurl-darwin-x64",
+  "name": "@tocha688/libcurl-freebsd-x64",
   "version": "0.0.0",
   "os": [
-    "darwin"
+    "freebsd"
   ],
   "cpu": [
     "x64"
   ],
-  "main": "libcurl.darwin-x64.node",
+  "main": "libcurl.freebsd-x64.node",
   "files": [
-    "libcurl.darwin-x64.node"
+    "libcurl.freebsd-x64.node"
   ],
   "license": "MIT",
   "engines": {

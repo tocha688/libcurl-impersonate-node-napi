@@ -1,15 +1,15 @@
 {
-  "name": "@tocha688/libcurl-win32-x64-msvc",
+  "name": "@tocha688/libcurl-win32-ia32-msvc",
   "version": "0.0.0",
   "os": [
     "win32"
   ],
   "cpu": [
-    "x64"
+    "ia32"
   ],
-  "main": "libcurl.win32-x64-msvc.node",
+  "main": "libcurl.win32-ia32-msvc.node",
   "files": [
-    "libcurl.win32-x64-msvc.node"
+    "libcurl.win32-ia32-msvc.node"
   ],
   "license": "MIT",
   "engines": {

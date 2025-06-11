@@ -1,5 +1,5 @@
 {
-  "name": "@tocha688/libcurl-linux-x64-gnu",
+  "name": "@tocha688/libcurl-linux-x64-musl",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,15 +7,15 @@
   "cpu": [
     "x64"
   ],
-  "main": "libcurl.linux-x64-gnu.node",
+  "main": "libcurl.linux-x64-musl.node",
   "files": [
-    "libcurl.linux-x64-gnu.node"
+    "libcurl.linux-x64-musl.node"
   ],
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
   "libc": [
-    "glibc"
+    "musl"
   ]
 }

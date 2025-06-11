@@ -1,6 +1,6 @@
 use napi_derive::napi;
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 
 pub fn get_ptr_address<T>(ptr: *const T) -> String {
     format!("0x{:x}", ptr as usize)
@@ -30,14 +30,7 @@ pub fn get_default_dir_name() -> String {
 
 #[napi]
 pub fn get_default_lib_path() -> String {
-    // 相当于 __dirname/../libs
-    // 这里用当前可执行文件路径的父目录再上一级
-    // let exe_path = env::current_exe().unwrap_or_else(|_| PathBuf::from("."));
     let base_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("libs");
-    // let base_dir = exe_path.parent()
-    //     .and_then(|p| p.parent())
-    //     .map(|p| p.join("libs"))
-    //     .unwrap_or_else(|| PathBuf::from("libs"));
 
     let dir_name = get_default_dir_name();
 

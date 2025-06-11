@@ -1,0 +1,18 @@
+{
+  "name": "@tocha688/libcurl-android-arm-eabi",
+  "version": "0.0.0",
+  "os": [
+    "android"
+  ],
+  "cpu": [
+    "arm"
+  ],
+  "main": "libcurl.android-arm-eabi.node",
+  "files": [
+    "libcurl.android-arm-eabi.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}
