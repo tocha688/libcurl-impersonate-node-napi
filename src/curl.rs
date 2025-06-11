@@ -4,6 +4,7 @@ use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
+use crate::loader::CurlSlistNode;
 use crate::utils::get_ptr_address;
 use crate::{
   constants::{CurlInfo, CurlOpt},
@@ -128,6 +129,20 @@ impl Curl {
         CurlOpt::HeaderData as c_int,
         self.header_buffer.get() as *mut c_void,
       );
+
+      // 设置响应头数据存储
+      (self.lib.easy_setopt)(
+        self.handle,
+        CurlOpt::HeaderData as c_int,
+        self.header_buffer.get() as *mut c_void,
+      );
+
+      // *** 重要：启用 cookie 引擎 ***
+      (self.lib.easy_setopt)(
+        self.handle,
+        CurlOpt::CookieJar as c_int,
+        std::ptr::null::<c_void>(), // 使用内存中的 cookie jar
+      );
     }
   }
 
@@ -159,22 +174,8 @@ impl Curl {
 
       (*headers_list_ptr) = Some(new_list);
 
-      // 设置 headers 到 curl handle
-      let result = (self.lib.easy_setopt)(
-        self.handle,
-        CurlOpt::HttpHeader as c_int,
-        new_list as *const c_void,
-      );
-
-      if result != 0 {
-        return Err(Error::new(
-          Status::GenericFailure,
-          format!("Failed to set headers: {}", result),
-        ));
-      }
+      self.set_opt(CurlOpt::HttpHeader, new_list as *const c_void)
     }
-
-    Ok(())
   }
 
   #[napi]
@@ -218,84 +219,79 @@ impl Curl {
     }
   }
 
+  pub fn set_opt(&self, option: CurlOpt, value: *const c_void) -> Result<()> {
+    unsafe {
+      let result = (self.lib.easy_setopt)(self.handle, option as c_int, value);
+      if result != 0 {
+        return Err(Error::new(
+          Status::GenericFailure,
+          format!(
+            "curl_easy_setopt failed with code: {} message:{}",
+            result,
+            self.error(result)
+          ),
+        ));
+      }
+    }
+    Ok(())
+  }
+  
   /// 设置字符串选项
   #[napi]
-  pub fn set_opt_string(&self, option: CurlOpt, value: String) -> i32 {
+  pub fn set_opt_string(&self, option: CurlOpt, value: String) -> Result<()> {
     let c_str = std::ffi::CString::new(value).unwrap();
-    unsafe {
-      (self.lib.easy_setopt)(
-        self.handle,
-        option as c_int,
-        c_str.as_ptr() as *const c_void,
-      )
-    }
+    self.set_opt(option, c_str.as_ptr() as *const c_void)
   }
 
   /// 设置长整型选项
   #[napi]
-  pub fn set_opt_long(&self, option: CurlOpt, value: i64) -> i32 {
-    unsafe { (self.lib.easy_setopt)(self.handle, option as c_int, value as *const c_void) }
+  pub fn set_opt_long(&self, option: CurlOpt, value: i64) -> Result<()> {
+    self.set_opt(option, value as *const c_void)
   }
 
   /// 设置boolean
   #[napi]
-  pub fn set_opt_bool(&self, option: CurlOpt, value: bool) -> i32 {
-    unsafe {
-      (self.lib.easy_setopt)(
-        self.handle,
-        option as c_int,
-        if value { 1 } else { 0 } as *const c_void,
-      )
-    }
+  pub fn set_opt_bool(&self, option: CurlOpt, value: bool) -> Result<()> {
+    self.set_opt(option, if value { 1 } else { 0 } as *const c_void)
   }
 
   /// 传入bytes
   #[napi]
-  pub fn set_opt_bytes(&self, option: CurlOpt, body: Vec<u8>) -> i32 {
-    unsafe { (self.lib.easy_setopt)(self.handle, option as c_int, body.as_ptr() as *const c_void) }
+  pub fn set_opt_bytes(&self, option: CurlOpt, body: Vec<u8>) -> Result<()> {
+    self.set_opt(option, body.as_ptr() as *const c_void)
+  }
+
+  pub fn get_info(&self, info: CurlInfo, value: *mut c_void) -> Result<()> {
+    let result = unsafe { (self.lib.easy_getinfo)(self.handle, info as c_int, value) };
+    if result == 0 {
+      Ok(())
+    } else {
+      Err(Error::new(
+        Status::GenericFailure,
+        format!(
+          "curl_easy_getinfo failed with code: {} message:{}",
+          result,
+          self.error(result)
+        ),
+      ))
+    }
   }
 
   /// 获取响应码
   #[napi]
   pub fn get_info_number(&self, option: CurlInfo) -> Result<i64> {
     let mut response_code: c_long = 0;
-    let result = unsafe {
-      (self.lib.easy_getinfo)(
-        self.handle,
-        option as c_int,
-        &mut response_code as *mut _ as *mut c_void,
-      )
-    };
-    if result == 0 {
-      Ok(response_code as i64)
-    } else {
-      Err(Error::new(
-        Status::GenericFailure,
-        format!("curl_easy_getinfo failed with code: {}", result),
-      ))
-    }
+    self.get_info(option, &mut response_code as *mut _ as *mut c_void)?;
+    Ok(response_code as i64)
   }
 
   /// 获取字符串信息
   #[napi]
   pub fn get_info_string(&self, option: CurlInfo) -> Result<String> {
     let mut url_ptr: *mut c_char = std::ptr::null_mut();
-    let result = unsafe {
-      (self.lib.easy_getinfo)(
-        self.handle,
-        option as c_int,
-        &mut url_ptr as *mut _ as *mut c_void,
-      )
-    };
-    if result == 0 && !url_ptr.is_null() {
-      let cstr = unsafe { std::ffi::CStr::from_ptr(url_ptr) };
-      Ok(cstr.to_string_lossy().to_string())
-    } else {
-      Err(Error::new(
-        Status::GenericFailure,
-        format!("curl_easy_getinfo failed with code: {}", result),
-      ))
-    }
+    self.get_info(option, &mut url_ptr as *mut _ as *mut c_void)?;
+    let cstr = unsafe { std::ffi::CStr::from_ptr(url_ptr) };
+    Ok(cstr.to_string_lossy().to_string())
   }
 
   /// 模拟浏览器
@@ -386,6 +382,94 @@ impl Curl {
   #[napi]
   pub fn get_resp_body(&self) -> Vec<u8> {
     unsafe { (*self.content_buffer.get()).clone() }
+  }
+
+  /// 获取信息数组
+  #[napi]
+  pub fn get_info_list(&self, option: CurlInfo) -> Result<Vec<String>> {
+    let mut cookie_list: CurlSlist = std::ptr::null_mut();
+    self.get_info(option, &mut cookie_list as *mut _ as *mut c_void)?;
+    let mut cookies = Vec::new();
+    if !cookie_list.is_null() {
+      unsafe {
+        // 将指针转换为正确的结构体类型
+        let mut current = cookie_list as *mut CurlSlistNode;
+
+        // 遍历链表 - 就像 C 代码中的 while(each) 循环
+        while !current.is_null() {
+          let node = &*current;
+
+          // 检查 data 指针是否有效
+          if !node.data.is_null() {
+            // 将 C 字符串转换为 Rust 字符串
+            let cstr = std::ffi::CStr::from_ptr(node.data);
+            if let Ok(cookie_str) = cstr.to_str() {
+              cookies.push(cookie_str.to_string());
+            }
+          }
+
+          // 移动到下一个节点 - 相当于 C 代码中的 each = each->next
+          current = node.next;
+        }
+
+        // 释放 cookie 列表 - 相当于 C 代码中的 curl_slist_free_all(cookies)
+        (self.lib.slist_free_all)(cookie_list);
+      }
+    }
+
+    Ok(cookies)
+  }
+  /// 设置链表
+  #[napi]
+  pub fn set_opt_list(&self, option: CurlOpt, arrays: Vec<String>) -> Result<()> {
+    let mut list_ptr: CurlSlist = std::ptr::null_mut();
+
+    for item in arrays {
+      let item_cstr = std::ffi::CString::new(item)
+        .map_err(|_| Error::new(Status::InvalidArg, "Invalid cookie string"))?;
+      unsafe {
+        list_ptr = (self.lib.slist_append)(list_ptr, item_cstr.as_ptr());
+      }
+    }
+
+    if list_ptr.is_null() {
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Failed to create cookie list",
+      ));
+    }
+    self.set_opt(option, list_ptr as *const c_void)?;
+    // 释放链表
+    unsafe {
+      (self.lib.slist_free_all)(list_ptr);
+    }
+
+    Ok(())
+  }
+
+  /// 获取cookie列表
+  #[napi]
+  pub fn get_cookies(&self) -> Result<Vec<String>> {
+    self.get_info_list(CurlInfo::CookieList)
+  }
+
+  /// 设置 cookie
+  #[napi]
+  pub fn set_cookies(&self, cookie: String) -> Result<()> {
+    let cookie_cstr = std::ffi::CString::new(cookie)
+      .map_err(|_| Error::new(Status::InvalidArg, "Invalid cookie string"))?;
+    self.set_opt(CurlOpt::Cookie, cookie_cstr.as_ptr() as *const c_void)
+  }
+
+  #[napi]
+  pub fn status(&self) -> i32 {
+    unsafe {
+      (self.lib.easy_getinfo)(
+        self.handle,
+        CurlInfo::ResponseCode as c_int,
+        std::ptr::null_mut(),
+      )
+    }
   }
 }
 

@@ -626,13 +626,13 @@ export declare class Curl {
   /** 清理所有 HTTP 头 */
   clearHeaders(): void
   /** 设置字符串选项 */
-  setOptString(option: CurlOpt, value: string): number
+  setOptString(option: CurlOpt, value: string): void
   /** 设置长整型选项 */
-  setOptLong(option: CurlOpt, value: number): number
+  setOptLong(option: CurlOpt, value: number): void
   /** 设置boolean */
-  setOptBool(option: CurlOpt, value: boolean): number
+  setOptBool(option: CurlOpt, value: boolean): void
   /** 传入bytes */
-  setOptBytes(option: CurlOpt, body: Array<number>): number
+  setOptBytes(option: CurlOpt, body: Array<number>): void
   /** 获取响应码 */
   getInfoNumber(option: CurlInfo): number
   /** 获取字符串信息 */
@@ -655,6 +655,15 @@ export declare class Curl {
   getRespHeaders(): Array<number>
   /** 获取响应体数据 */
   getRespBody(): Array<number>
+  /** 获取信息数组 */
+  getInfoList(option: CurlInfo): Array<string>
+  /** 设置链表 */
+  setOptList(option: CurlOpt, arrays: Array<string>): void
+  /** 获取cookie列表 */
+  getCookies(): Array<string>
+  /** 设置 cookie */
+  setCookies(cookie: string): void
+  status(): number
 }
 export type CurlMulti = CurlMulti2
 export declare class CurlMulti2 {

@@ -71,6 +71,12 @@ pub struct CurlWaitFd {
   pub events: c_short,
   pub revents: c_short,
 }
+//链表结构体
+#[repr(C)]
+pub struct CurlSlistNode {
+  pub data: *mut c_char,
+  pub next: *mut CurlSlistNode,
+}
 
 // Easy interface 函数类型 - 完整版本
 pub type CurlEasyInit = unsafe extern "C" fn() -> CurlHandle;
