@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "main": "index.js",
   "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/tocha688/libcurl-impersonate-node-napi"
@@ -29,7 +33,11 @@
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "universal": "napi universal",
-    "version": "napi version"
+    "version": "napi version",
+    "install": "node scripts/install.cjs"
   },
-  "packageManager": "yarn@4.9.2"
+  "packageManager": "yarn@4.9.2",
+  "dependencies": {
+    "tar": "^7.4.3"
+  }
 }

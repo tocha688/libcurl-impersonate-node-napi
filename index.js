@@ -32,10 +32,10 @@ switch (platform) {
   case 'android':
     switch (arch) {
       case 'arm64':
-        localFileExisted = existsSync(join(__dirname, '@tocha688/libcurl.android-arm64.node'))
+        localFileExisted = existsSync(join(__dirname, 'libcurl.android-arm64.node'))
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.android-arm64.node')
+            nativeBinding = require('./libcurl.android-arm64.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-android-arm64')
           }
@@ -44,10 +44,10 @@ switch (platform) {
         }
         break
       case 'arm':
-        localFileExisted = existsSync(join(__dirname, '@tocha688/libcurl.android-arm-eabi.node'))
+        localFileExisted = existsSync(join(__dirname, 'libcurl.android-arm-eabi.node'))
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.android-arm-eabi.node')
+            nativeBinding = require('./libcurl.android-arm-eabi.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-android-arm-eabi')
           }
@@ -63,11 +63,11 @@ switch (platform) {
     switch (arch) {
       case 'x64':
         localFileExisted = existsSync(
-          join(__dirname, '@tocha688/libcurl.win32-x64-msvc.node')
+          join(__dirname, 'libcurl.win32-x64-msvc.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.win32-x64-msvc.node')
+            nativeBinding = require('./libcurl.win32-x64-msvc.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-win32-x64-msvc')
           }
@@ -77,11 +77,11 @@ switch (platform) {
         break
       case 'ia32':
         localFileExisted = existsSync(
-          join(__dirname, '@tocha688/libcurl.win32-ia32-msvc.node')
+          join(__dirname, 'libcurl.win32-ia32-msvc.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.win32-ia32-msvc.node')
+            nativeBinding = require('./libcurl.win32-ia32-msvc.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-win32-ia32-msvc')
           }
@@ -91,11 +91,11 @@ switch (platform) {
         break
       case 'arm64':
         localFileExisted = existsSync(
-          join(__dirname, '@tocha688/libcurl.win32-arm64-msvc.node')
+          join(__dirname, 'libcurl.win32-arm64-msvc.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.win32-arm64-msvc.node')
+            nativeBinding = require('./libcurl.win32-arm64-msvc.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-win32-arm64-msvc')
           }
@@ -108,10 +108,10 @@ switch (platform) {
     }
     break
   case 'darwin':
-    localFileExisted = existsSync(join(__dirname, '@tocha688/libcurl.darwin-universal.node'))
+    localFileExisted = existsSync(join(__dirname, 'libcurl.darwin-universal.node'))
     try {
       if (localFileExisted) {
-        nativeBinding = require('./@tocha688/libcurl.darwin-universal.node')
+        nativeBinding = require('./libcurl.darwin-universal.node')
       } else {
         nativeBinding = require('@tocha688/libcurl-darwin-universal')
       }
@@ -119,10 +119,10 @@ switch (platform) {
     } catch {}
     switch (arch) {
       case 'x64':
-        localFileExisted = existsSync(join(__dirname, '@tocha688/libcurl.darwin-x64.node'))
+        localFileExisted = existsSync(join(__dirname, 'libcurl.darwin-x64.node'))
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.darwin-x64.node')
+            nativeBinding = require('./libcurl.darwin-x64.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-darwin-x64')
           }
@@ -132,11 +132,11 @@ switch (platform) {
         break
       case 'arm64':
         localFileExisted = existsSync(
-          join(__dirname, '@tocha688/libcurl.darwin-arm64.node')
+          join(__dirname, 'libcurl.darwin-arm64.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.darwin-arm64.node')
+            nativeBinding = require('./libcurl.darwin-arm64.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-darwin-arm64')
           }
@@ -152,10 +152,10 @@ switch (platform) {
     if (arch !== 'x64') {
       throw new Error(`Unsupported architecture on FreeBSD: ${arch}`)
     }
-    localFileExisted = existsSync(join(__dirname, '@tocha688/libcurl.freebsd-x64.node'))
+    localFileExisted = existsSync(join(__dirname, 'libcurl.freebsd-x64.node'))
     try {
       if (localFileExisted) {
-        nativeBinding = require('./@tocha688/libcurl.freebsd-x64.node')
+        nativeBinding = require('./libcurl.freebsd-x64.node')
       } else {
         nativeBinding = require('@tocha688/libcurl-freebsd-x64')
       }
@@ -168,11 +168,11 @@ switch (platform) {
       case 'x64':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-x64-musl.node')
+            join(__dirname, 'libcurl.linux-x64-musl.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-x64-musl.node')
+              nativeBinding = require('./libcurl.linux-x64-musl.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-x64-musl')
             }
@@ -181,11 +181,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-x64-gnu.node')
+            join(__dirname, 'libcurl.linux-x64-gnu.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-x64-gnu.node')
+              nativeBinding = require('./libcurl.linux-x64-gnu.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-x64-gnu')
             }
@@ -197,11 +197,11 @@ switch (platform) {
       case 'arm64':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-arm64-musl.node')
+            join(__dirname, 'libcurl.linux-arm64-musl.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-arm64-musl.node')
+              nativeBinding = require('./libcurl.linux-arm64-musl.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-arm64-musl')
             }
@@ -210,11 +210,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-arm64-gnu.node')
+            join(__dirname, 'libcurl.linux-arm64-gnu.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-arm64-gnu.node')
+              nativeBinding = require('./libcurl.linux-arm64-gnu.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-arm64-gnu')
             }
@@ -226,11 +226,11 @@ switch (platform) {
       case 'arm':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-arm-musleabihf.node')
+            join(__dirname, 'libcurl.linux-arm-musleabihf.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-arm-musleabihf.node')
+              nativeBinding = require('./libcurl.linux-arm-musleabihf.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-arm-musleabihf')
             }
@@ -239,11 +239,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-arm-gnueabihf.node')
+            join(__dirname, 'libcurl.linux-arm-gnueabihf.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-arm-gnueabihf.node')
+              nativeBinding = require('./libcurl.linux-arm-gnueabihf.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-arm-gnueabihf')
             }
@@ -255,11 +255,11 @@ switch (platform) {
       case 'riscv64':
         if (isMusl()) {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-riscv64-musl.node')
+            join(__dirname, 'libcurl.linux-riscv64-musl.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-riscv64-musl.node')
+              nativeBinding = require('./libcurl.linux-riscv64-musl.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-riscv64-musl')
             }
@@ -268,11 +268,11 @@ switch (platform) {
           }
         } else {
           localFileExisted = existsSync(
-            join(__dirname, '@tocha688/libcurl.linux-riscv64-gnu.node')
+            join(__dirname, 'libcurl.linux-riscv64-gnu.node')
           )
           try {
             if (localFileExisted) {
-              nativeBinding = require('./@tocha688/libcurl.linux-riscv64-gnu.node')
+              nativeBinding = require('./libcurl.linux-riscv64-gnu.node')
             } else {
               nativeBinding = require('@tocha688/libcurl-linux-riscv64-gnu')
             }
@@ -283,11 +283,11 @@ switch (platform) {
         break
       case 's390x':
         localFileExisted = existsSync(
-          join(__dirname, '@tocha688/libcurl.linux-s390x-gnu.node')
+          join(__dirname, 'libcurl.linux-s390x-gnu.node')
         )
         try {
           if (localFileExisted) {
-            nativeBinding = require('./@tocha688/libcurl.linux-s390x-gnu.node')
+            nativeBinding = require('./libcurl.linux-s390x-gnu.node')
           } else {
             nativeBinding = require('@tocha688/libcurl-linux-s390x-gnu')
           }
@@ -310,7 +310,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { setLibPath, getLibPath, CurlOpt, CurlInfo, CurlMOpt, CurlError, CurlHttpVersion, CurlWsFlag, CurlSslVersion, UrlIpResolve, CurlImpersonate, Curl, globalInit, globalCleanup, getVersion, CurlMulti2 } = nativeBinding
+const { setLibPath, getLibPath, CurlOpt, CurlInfo, CurlMOpt, CurlError, CurlHttpVersion, CurlWsFlag, CurlSslVersion, UrlIpResolve, CurlImpersonate, Curl, globalInit, globalCleanup, getVersion, getDefaultDirName, getDefaultLibPath, CurlMulti2 } = nativeBinding
 
 module.exports.setLibPath = setLibPath
 module.exports.getLibPath = getLibPath
@@ -327,4 +327,6 @@ module.exports.Curl = Curl
 module.exports.globalInit = globalInit
 module.exports.globalCleanup = globalCleanup
 module.exports.getVersion = getVersion
+module.exports.getDefaultDirName = getDefaultDirName
+module.exports.getDefaultLibPath = getDefaultLibPath
 module.exports.CurlMulti2 = CurlMulti2
