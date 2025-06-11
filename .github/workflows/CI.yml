@@ -246,6 +246,13 @@ jobs:
       - name: List packages
         run: ls -R ./npm
         shell: bash
+      # 添加 token 验证步骤
+      - name: Verify NPM Token
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+          npm whoami
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Publish
         run: |
           npm config set provenance true
