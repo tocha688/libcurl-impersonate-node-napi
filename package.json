@@ -1,10 +1,9 @@
 {
   "name": "@tocha688/libcurl",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
-    "scripts/**",
     "index.js",
     "index.d.ts"
   ],
@@ -49,8 +48,7 @@
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "universal": "napi universal",
-    "version": "napi version",
-    "install": "node scripts/install.cjs"
+    "version": "napi version"
   },
   "packageManager": "yarn@4.9.2",
   "dependencies": {
