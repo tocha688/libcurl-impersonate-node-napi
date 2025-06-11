@@ -28,8 +28,8 @@ pub fn get_default_dir_name() -> String {
 }
 
 #[napi]
-pub fn get_default_lib_path() -> String {
-  let base_dir = Path::new("libs");
+pub fn get_default_lib_path(base: Option<String>) -> String {
+  let base_dir = Path::new(&base.unwrap_or("".to_string())).join("libs");
 
   let dir_name = get_default_dir_name();
 

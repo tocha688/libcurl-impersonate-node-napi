@@ -604,7 +604,7 @@ export declare function globalCleanup(): void
 /** 获取 libcurl 版本信息 */
 export declare function getVersion(): string
 export declare function getDefaultDirName(): string
-export declare function getDefaultLibPath(): string
+export declare function getDefaultLibPath(base?: string | undefined | null): string
 export interface CurlMsgResult {
   msg: number
   easyHandle: number
