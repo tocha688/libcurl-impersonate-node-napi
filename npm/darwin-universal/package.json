@@ -8,8 +8,10 @@
   "files": [
     "libcurl.darwin-universal.node"
   ],
+  "description": "libcurl impersonate",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  }
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
 }
