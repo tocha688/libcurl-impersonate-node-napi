@@ -1,6 +1,10 @@
 {
   "name": "@tocha688/libcurl-win32-x64-msvc",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tocha688/libcurl-impersonate-node-napi"
+  },
   "os": [
     "win32"
   ],
