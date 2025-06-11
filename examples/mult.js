@@ -82,7 +82,7 @@ console.log("Requests started, waiting for completion...")
 
 // 30秒超时
 setTimeout(() => {
-    console.log("Timeout reached")
+    console.log("Timeout reached.")
     clearInterval(performInterval)
     process.exit(0)
 }, 30000)
