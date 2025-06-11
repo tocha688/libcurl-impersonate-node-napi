@@ -58,4 +58,4 @@ curl.getCookies().forEach(cookie => {
 
 curl.close()
 
-console.log("Curl instance closed.")
+console.log("Curl instance closed..")
