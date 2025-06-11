@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "main": "index.js",
   "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tocha688/libcurl-impersonate-node-napi"
+  },
   "napi": {
     "name": "libcurl",
     "triples": {}
