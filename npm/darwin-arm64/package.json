@@ -1,5 +1,5 @@
 {
-  "name": "creqlib-darwin-arm64",
+  "name": "@tocha688/libcurl-darwin-arm64",
   "version": "0.0.0",
   "os": [
     "darwin"
@@ -7,14 +7,14 @@
   "cpu": [
     "arm64"
   ],
-  "main": "creqlib.darwin-arm64.node",
+  "main": "libcurl.darwin-arm64.node",
   "files": [
-    "creqlib.darwin-arm64.node"
+    "libcurl.darwin-arm64.node"
   ],
-  "description": "curl-impersonate for node",
+  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi"
 }

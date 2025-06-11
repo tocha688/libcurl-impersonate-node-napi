@@ -1,3 +1,3 @@
-# `creqlib-linux-arm-gnueabihf`
+# `@tocha688/libcurl-linux-arm-gnueabihf`
 
-This is the **armv7-unknown-linux-gnueabihf** binary for `creqlib`
+This is the **armv7-unknown-linux-gnueabihf** binary for `@tocha688/libcurl`

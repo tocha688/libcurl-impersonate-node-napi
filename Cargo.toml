@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "curl-impersonate"
+name = "@tocha688/libcurl"
 version = "0.0.0"
 
 [lib]

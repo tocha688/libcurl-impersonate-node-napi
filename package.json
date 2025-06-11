@@ -1,10 +1,10 @@
 {
-  "name": "creqlib",
+  "name": "@tocha688/libcurl",
   "version": "0.0.0",
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
-    "name": "creqlib",
+    "name": "libcurl",
     "triples": {
       "additional": [
         "aarch64-apple-darwin",
@@ -44,22 +44,22 @@
   },
   "packageManager": "yarn@4.9.2",
   "optionalDependencies": {
-    "curl-impersonate-win32-x64-msvc": "0.0.0",
-    "curl-impersonate-darwin-x64": "0.0.0",
-    "curl-impersonate-linux-x64-gnu": "0.0.0",
-    "curl-impersonate-darwin-arm64": "0.0.0",
-    "curl-impersonate-android-arm64": "0.0.0",
-    "curl-impersonate-linux-arm64-gnu": "0.0.0",
-    "curl-impersonate-linux-arm64-musl": "0.0.0",
-    "curl-impersonate-win32-arm64-msvc": "0.0.0",
-    "curl-impersonate-linux-arm-gnueabihf": "0.0.0",
-    "curl-impersonate-linux-arm-musleabihf": "0.0.0",
-    "curl-impersonate-linux-x64-musl": "0.0.0",
-    "curl-impersonate-freebsd-x64": "0.0.0",
-    "curl-impersonate-win32-ia32-msvc": "0.0.0",
-    "curl-impersonate-android-arm-eabi": "0.0.0",
-    "curl-impersonate-linux-riscv64-gnu": "0.0.0"
+    "@tocha688/libcurl-win32-x64-msvc": "0.0.0",
+    "@tocha688/libcurl-darwin-x64": "0.0.0",
+    "@tocha688/libcurl-linux-x64-gnu": "0.0.0",
+    "@tocha688/libcurl-darwin-arm64": "0.0.0",
+    "@tocha688/libcurl-android-arm64": "0.0.0",
+    "@tocha688/libcurl-linux-arm64-gnu": "0.0.0",
+    "@tocha688/libcurl-linux-arm64-musl": "0.0.0",
+    "@tocha688/libcurl-win32-arm64-msvc": "0.0.0",
+    "@tocha688/libcurl-linux-arm-gnueabihf": "0.0.0",
+    "@tocha688/libcurl-linux-arm-musleabihf": "0.0.0",
+    "@tocha688/libcurl-linux-x64-musl": "0.0.0",
+    "@tocha688/libcurl-freebsd-x64": "0.0.0",
+    "@tocha688/libcurl-win32-ia32-msvc": "0.0.0",
+    "@tocha688/libcurl-android-arm-eabi": "0.0.0",
+    "@tocha688/libcurl-linux-riscv64-gnu": "0.0.0"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
-  "description": "curl-impersonate for node"
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi",
+  "description": "@tocha688/libcurl for node"
 }

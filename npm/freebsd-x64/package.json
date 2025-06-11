@@ -1,5 +1,5 @@
 {
-  "name": "creqlib-freebsd-x64",
+  "name": "@tocha688/libcurl-freebsd-x64",
   "version": "0.0.0",
   "os": [
     "freebsd"
@@ -7,14 +7,14 @@
   "cpu": [
     "x64"
   ],
-  "main": "creqlib.freebsd-x64.node",
+  "main": "libcurl.freebsd-x64.node",
   "files": [
-    "creqlib.freebsd-x64.node"
+    "libcurl.freebsd-x64.node"
   ],
-  "description": "curl-impersonate for node",
+  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi"
 }

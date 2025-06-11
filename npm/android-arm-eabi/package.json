@@ -1,5 +1,5 @@
 {
-  "name": "creqlib-android-arm-eabi",
+  "name": "@tocha688/libcurl-android-arm-eabi",
   "version": "0.0.0",
   "os": [
     "android"
@@ -7,14 +7,14 @@
   "cpu": [
     "arm"
   ],
-  "main": "creqlib.android-arm-eabi.node",
+  "main": "libcurl.android-arm-eabi.node",
   "files": [
-    "creqlib.android-arm-eabi.node"
+    "libcurl.android-arm-eabi.node"
   ],
-  "description": "curl-impersonate for node",
+  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi"
 }

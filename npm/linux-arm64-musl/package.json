@@ -1,5 +1,5 @@
 {
-  "name": "creqlib-linux-arm64-musl",
+  "name": "@tocha688/libcurl-linux-arm64-musl",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,16 +7,16 @@
   "cpu": [
     "arm64"
   ],
-  "main": "creqlib.linux-arm64-musl.node",
+  "main": "libcurl.linux-arm64-musl.node",
   "files": [
-    "creqlib.linux-arm64-musl.node"
+    "libcurl.linux-arm64-musl.node"
   ],
-  "description": "curl-impersonate for node",
+  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi",
   "libc": [
     "musl"
   ]

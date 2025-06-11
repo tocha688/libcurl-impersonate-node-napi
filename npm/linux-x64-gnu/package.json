@@ -1,5 +1,5 @@
 {
-  "name": "creqlib-linux-x64-gnu",
+  "name": "@tocha688/libcurl-linux-x64-gnu",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,16 +7,16 @@
   "cpu": [
     "x64"
   ],
-  "main": "creqlib.linux-x64-gnu.node",
+  "main": "libcurl.linux-x64-gnu.node",
   "files": [
-    "creqlib.linux-x64-gnu.node"
+    "libcurl.linux-x64-gnu.node"
   ],
-  "description": "curl-impersonate for node",
+  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi",
   "libc": [
     "glibc"
   ]

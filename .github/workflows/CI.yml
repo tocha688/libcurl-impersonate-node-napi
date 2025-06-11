@@ -1,7 +1,7 @@
 name: CI
 env:
   DEBUG: napi:*
-  APP_NAME: creqlib
+  APP_NAME: libcurl
   MACOSX_DEPLOYMENT_TARGET: '10.13'
 permissions:
   contents: write

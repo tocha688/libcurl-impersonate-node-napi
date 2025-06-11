@@ -315,7 +315,7 @@ pub enum CurlOpt {
     TcpKeepCnt = 326,
     UploadFlags = 327,
     
-    // curl-impersonate specific options
+    // @tocha688/libcurl specific options
     HttpBaseHeader = 11000,
     SslSigHashAlgs = 11001,
     SslEnableAlps = 1002,

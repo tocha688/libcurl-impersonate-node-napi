@@ -635,7 +635,7 @@ pub fn napi_load_library() -> napi::Result<&'static CurlFunctions> {
   load_curl_library().or_else(|_| {
     Err(Error::new(
       Status::GenericFailure,
-      "Failed to load curl-impersonate library",
+      "Failed to load @tocha688/libcurl library",
     ))
   })
 }

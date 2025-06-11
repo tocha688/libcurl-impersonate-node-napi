@@ -1,5 +1,5 @@
 {
-  "name": "creqlib-win32-ia32-msvc",
+  "name": "@tocha688/libcurl-win32-ia32-msvc",
   "version": "0.0.0",
   "os": [
     "win32"
@@ -7,14 +7,14 @@
   "cpu": [
     "ia32"
   ],
-  "main": "creqlib.win32-ia32-msvc.node",
+  "main": "libcurl.win32-ia32-msvc.node",
   "files": [
-    "creqlib.win32-ia32-msvc.node"
+    "libcurl.win32-ia32-msvc.node"
   ],
-  "description": "curl-impersonate for node",
+  "description": "@tocha688/libcurl for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
-  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
+  "repository": "https://github.com/tocha688/lib@tocha688/libcurl-node-napi"
 }

@@ -4,7 +4,7 @@ use napi_derive::napi;
 use once_cell::sync::Lazy;
 
 const CURL_IMPERSONATE_VERSION: &str = "v1.0.0";
-const BASE_URL: &str = "https://github.com/lexiforest/curl-impersonate/releases/download";
+const BASE_URL: &str = "https://github.com/lexiforest/@tocha688/libcurl/releases/download";
 
 #[derive(Debug, Clone)]
 pub struct PlatformInfo {
@@ -50,7 +50,7 @@ impl PlatformInfo {
     }
 
     pub fn get_download_filename(&self, is_libcurl: bool) -> String {
-        let prefix = if is_libcurl { "libcurl-impersonate" } else { "curl-impersonate" };
+        let prefix = if is_libcurl { "lib@tocha688/libcurl" } else { "@tocha688/libcurl" };
         
         // 特殊处理 Windows 架构映射
         let arch = if self.os.contains("win32") {

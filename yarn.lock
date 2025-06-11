@@ -489,9 +489,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"curl-impersonate@workspace:.":
+"@tocha688/libcurl@workspace:.":
   version: 0.0.0-use.local
-  resolution: "curl-impersonate@workspace:."
+  resolution: "@tocha688/libcurl@workspace:."
   dependencies:
     "@napi-rs/cli": "npm:^2.18.4"
     ava: "npm:^6.0.1"
