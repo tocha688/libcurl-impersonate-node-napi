@@ -1,3 +1,3 @@
-# `curl-impersonate-win32-ia32-msvc`
+# `creqlib-win32-ia32-msvc`
 
-This is the **i686-pc-windows-msvc** binary for `curl-impersonate`
+This is the **i686-pc-windows-msvc** binary for `creqlib`

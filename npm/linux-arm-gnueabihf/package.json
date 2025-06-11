@@ -1,5 +1,5 @@
 {
-  "name": "curl-impersonate-linux-arm-gnueabihf",
+  "name": "creqlib-linux-arm-gnueabihf",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,12 +7,14 @@
   "cpu": [
     "arm"
   ],
-  "main": "curl-impersonate.linux-arm-gnueabihf.node",
+  "main": "creqlib.linux-arm-gnueabihf.node",
   "files": [
-    "curl-impersonate.linux-arm-gnueabihf.node"
+    "creqlib.linux-arm-gnueabihf.node"
   ],
+  "description": "curl-impersonate for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  }
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
 }

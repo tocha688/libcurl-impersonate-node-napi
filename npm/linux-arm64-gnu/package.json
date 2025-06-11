@@ -1,5 +1,5 @@
 {
-  "name": "curl-impersonate-linux-arm64-gnu",
+  "name": "creqlib-linux-arm64-gnu",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,14 +7,16 @@
   "cpu": [
     "arm64"
   ],
-  "main": "curl-impersonate.linux-arm64-gnu.node",
+  "main": "creqlib.linux-arm64-gnu.node",
   "files": [
-    "curl-impersonate.linux-arm64-gnu.node"
+    "creqlib.linux-arm64-gnu.node"
   ],
+  "description": "curl-impersonate for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
   },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi",
   "libc": [
     "glibc"
   ]

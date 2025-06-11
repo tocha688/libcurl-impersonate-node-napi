@@ -1,5 +1,5 @@
 {
-  "name": "curl-impersonate-darwin-x64",
+  "name": "creqlib-darwin-x64",
   "version": "0.0.0",
   "os": [
     "darwin"
@@ -7,12 +7,14 @@
   "cpu": [
     "x64"
   ],
-  "main": "curl-impersonate.darwin-x64.node",
+  "main": "creqlib.darwin-x64.node",
   "files": [
-    "curl-impersonate.darwin-x64.node"
+    "creqlib.darwin-x64.node"
   ],
+  "description": "curl-impersonate for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  }
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
 }

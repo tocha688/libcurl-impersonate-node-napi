@@ -1,5 +1,5 @@
 {
-  "name": "curl-impersonate-linux-arm-musleabihf",
+  "name": "creqlib-linux-arm-musleabihf",
   "version": "0.0.0",
   "os": [
     "linux"
@@ -7,12 +7,14 @@
   "cpu": [
     "arm"
   ],
-  "main": "curl-impersonate.linux-arm-musleabihf.node",
+  "main": "creqlib.linux-arm-musleabihf.node",
   "files": [
-    "curl-impersonate.linux-arm-musleabihf.node"
+    "creqlib.linux-arm-musleabihf.node"
   ],
+  "description": "curl-impersonate for node",
   "license": "MIT",
   "engines": {
     "node": ">= 10"
-  }
+  },
+  "repository": "https://github.com/tocha688/libcurl-impersonate-node-napi"
 }

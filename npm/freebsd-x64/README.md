@@ -1,3 +1,3 @@
-# `curl-impersonate-freebsd-x64`
+# `creqlib-freebsd-x64`
 
-This is the **x86_64-unknown-freebsd** binary for `curl-impersonate`
+This is the **x86_64-unknown-freebsd** binary for `creqlib`
