@@ -4,7 +4,8 @@ use std::{
 };
 
 use napi::{
-  bindgen_prelude::*, threadsafe_function::ThreadSafeCallContext,
+  bindgen_prelude::*,
+  threadsafe_function::{ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction},
 };
 use napi_derive::napi;
 
@@ -31,7 +32,7 @@ pub struct CurlMsgDataResult {
 
 pub struct SocketData {
   pub curl_id: String,
-  pub socket: i32,
+  pub sockfd: i32,
   pub what: i32,
 }
 
@@ -51,8 +52,9 @@ struct MultiData {
   timer: Box<dyn FnMut(TimerData) -> bool + Send>,
 }
 
-#[napi(js_name = "CurlMulti2")]
+#[napi(js_name = "CurlMulti")]
 pub struct CurlMulti {
+  pub closed: bool,
   raw: Arc<RawMulti>,
   data: Arc<Mutex<MultiData>>,
 }
@@ -74,9 +76,10 @@ impl CurlMulti {
         socket: Box::new(|_| {}),
         timer: Box::new(|_| true),
       })),
+      closed: false,
     };
 
-    multi.setup_default_callbacks()?;
+    // multi.setup_default_callbacks()?;
     Ok(multi)
   }
 
@@ -114,40 +117,62 @@ impl CurlMulti {
     Ok(())
   }
 
-  #[napi(ts_args_type = "callback: (err: null | Error, result: {curl_id:string,socket:number,what:number}) => void")]
-  pub fn set_socket_callback(&self, env: Env, callback: JsFunction) -> Result<()> {
-    let tsfn = env.create_threadsafe_function(&callback, 0, |ctx: ThreadSafeCallContext<SocketData>| {
-      let sdata = ctx.value;
-      let mut obj = ctx.env.create_object()?;
-      obj.set("curl_id", sdata.curl_id)?;
-      obj.set("socket", sdata.socket)?;
-      obj.set("what", sdata.what)?;
-      Ok(vec![obj])
-    })?;
+  #[napi(ts_args_type = "callback: (result: {curl_id:string,sockfd:number,what:number}) => void")]
+  pub fn set_socket_callback(&self, callback: JsFunction) -> Result<()> {
+    let tsfn: ThreadsafeFunction<SocketData, ErrorStrategy::Fatal> = callback
+      .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<SocketData>| {
+        let sdata = ctx.value;
+        let mut obj = ctx.env.create_object()?;
+        obj.set("curl_id", sdata.curl_id)?;
+        obj.set("sockfd", sdata.sockfd)?;
+        obj.set("what", sdata.what)?;
+        Ok(vec![obj])
+      })?;
 
     if let Ok(mut data) = self.data.lock() {
       data.socket = Box::new(move |sdata| {
-        let _ = tsfn.call(Ok(sdata), napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking);
+        let _ = tsfn.call(
+          sdata,
+          napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
+        );
       });
+      unsafe {
+        (self.raw.lib.multi_setopt)(
+          self.raw.handle,
+          CurlMOpt::SocketFunction as c_int,
+          socket_callback as *const c_void,
+        );
+      }
     }
     Ok(())
   }
 
-  #[napi(ts_args_type= "callback: (err: null | Error, result: {multi_id:string,timeout_ms:number}) => void")]
-  pub fn set_timer_callback(&self, env: Env, callback: JsFunction) -> Result<()> {
-    let tsfn = env.create_threadsafe_function(&callback, 0, |ctx: ThreadSafeCallContext<TimerData>| {
-      let tdata = ctx.value;
-      let mut obj = ctx.env.create_object()?;
-      obj.set("multi_id", tdata.multi_id)?;
-      obj.set("timeout_ms", tdata.timeout_ms)?;
-      Ok(vec![obj])
-    })?;
+  #[napi(ts_args_type = "callback: (result: {multi_id:string,timeout_ms:number}) => void")]
+  pub fn set_timer_callback(&self, callback: JsFunction) -> Result<()> {
+    let tsfn: ThreadsafeFunction<TimerData, ErrorStrategy::Fatal> = callback
+      .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<TimerData>| {
+        let tdata = ctx.value;
+        let mut obj = ctx.env.create_object()?;
+        obj.set("multi_id", tdata.multi_id)?;
+        obj.set("timeout_ms", tdata.timeout_ms)?;
+        Ok(vec![obj])
+      })?;
 
     if let Ok(mut data) = self.data.lock() {
       data.timer = Box::new(move |tdata| {
-        let _ = tsfn.call(Ok(tdata), napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking);
+        let _ = tsfn.call(
+          tdata,
+          napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
+        );
         true
       });
+      unsafe {
+        (self.raw.lib.multi_setopt)(
+          self.raw.handle,
+          CurlMOpt::TimerFunction as c_int,
+          timer_callback as *const c_void,
+        );
+      }
     }
     Ok(())
   }
@@ -198,17 +223,25 @@ impl CurlMulti {
     unsafe {
       let result = (self.raw.lib.multi_perform)(self.raw.handle, &mut remaining);
       if result != 0 && result != 1 {
-        return Err(Error::from_reason(format!("Get running handles failed: {}", result)));
+        return Err(Error::from_reason(format!(
+          "Get running handles failed: {}",
+          result
+        )));
       }
     }
     Ok(remaining as u32)
   }
 
   #[napi]
-  pub fn socket_action(&mut self, socket: c_int, what: c_int) -> Result<u32> {
+  pub fn socket_action(&mut self, socket: i64, what: i64) -> Result<u32> {
     let mut remaining = 0;
     unsafe {
-      let result = (self.raw.lib.multi_socket_action)(self.raw.handle, socket, what, &mut remaining);
+      let result = (self.raw.lib.multi_socket_action)(
+        self.raw.handle,
+        socket as c_int,
+        what as c_int,
+        &mut remaining,
+      );
       if result != 0 {
         return Err(Error::from_reason(format!("Action failed: {}", result)));
       }
@@ -221,31 +254,37 @@ impl CurlMulti {
     if self.raw.handle.is_null() {
       return Err(Error::from_reason("Curl multi handle is null"));
     }
-    
+
     let mut msgs_left = 0;
     let msg_ptr = unsafe { (self.raw.lib.multi_info_read)(self.raw.handle, &mut msgs_left) };
 
-    println!("info_read: msg_ptr={:p}, msgs_left={}", msg_ptr, msgs_left);
+    // println!("info_read: msg_ptr={:p}, msgs_left={}", msg_ptr, msgs_left);
 
     if msg_ptr.is_null() {
       // 获取当前运行的传输数量来调试
       let mut running = 0;
       unsafe {
         let result = (self.raw.lib.multi_perform)(self.raw.handle, &mut running);
-        println!("info_read: no message, running transfers={}, perform_result={}", running, result);
+        if result != 0 {
+          return Err(Error::from_reason(format!("Info read  failed: {}", result)));
+        }
       }
-      
+
       // 也检查一下 multi handle 的状态
-      println!("info_read: multi_handle={:p}", self.raw.handle);
-      
+      // println!("info_read: multi_handle={:p}", self.raw.handle);
+
       return Ok(None);
     }
 
     // 正确解引用指针来访问结构体字段
     let curl_msg = unsafe { &*msg_ptr };
-    
-    println!("info_read: found message - msg={}, easy_handle={:p}, result={}", 
-             curl_msg.msg, curl_msg.easy_handle, unsafe { curl_msg.data.result });
+
+    // println!(
+    //   "info_read: found message - msg={}, easy_handle={:p}, result={}",
+    //   curl_msg.msg,
+    //   curl_msg.easy_handle,
+    //   unsafe { curl_msg.data.result }
+    // );
 
     Ok(Some(CurlMsgResult {
       msg: curl_msg.msg as i64,
@@ -259,7 +298,8 @@ impl CurlMulti {
   }
 
   #[napi]
-  pub fn close(&self) {
+  pub fn close(&mut self) {
+    self.closed = true;
     unsafe {
       (self.raw.lib.multi_cleanup)(self.raw.handle);
     }
@@ -278,11 +318,15 @@ impl Drop for CurlMulti {
 
 extern "C" fn socket_callback(
   _easy: CurlHandle,
-  socket: c_int,
+  sockfd: c_int,
   what: c_int,
   userptr: *mut c_void,
   _socketp: *mut c_void,
 ) -> c_int {
+  // println!(
+  //   "socket_callback called: easy={:p}, sockfd={}, what={}",
+  //   _easy, sockfd, what
+  // );
   if userptr.is_null() {
     return 0;
   }
@@ -293,7 +337,7 @@ extern "C" fn socket_callback(
   if let Ok(mut data) = data_arc.try_lock() {
     (data.socket)(SocketData {
       curl_id: get_ptr_address(_easy),
-      socket,
+      sockfd,
       what,
     });
   }
@@ -307,6 +351,10 @@ extern "C" fn timer_callback(
   timeout_ms: c_long,
   userptr: *mut c_void,
 ) -> c_int {
+  // println!(
+  //   "timer_callback called: multi={:p}, timeout_ms={}",
+  //   _multi, timeout_ms
+  // );
   if userptr.is_null() {
     return 0;
   }
@@ -317,7 +365,7 @@ extern "C" fn timer_callback(
   let keep_going = if let Ok(mut data) = data_arc.try_lock() {
     (data.timer)(TimerData {
       multi_id: get_ptr_address(_multi),
-      timeout_ms:timeout_ms as i64,
+      timeout_ms: timeout_ms as i64,
     })
   } else {
     false
@@ -325,5 +373,9 @@ extern "C" fn timer_callback(
 
   std::mem::forget(data_arc);
 
-  if keep_going { 0 } else { -1 }
+  if keep_going {
+    0
+  } else {
+    -1
+  }
 }

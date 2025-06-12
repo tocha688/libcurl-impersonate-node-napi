@@ -35,6 +35,7 @@ curl.addHeader("h2","w1")
 
 console.log("Starting request...")
 
+
 // 执行请求 - 同步等待完成
 let res = curl.perform()
 

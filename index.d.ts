@@ -558,7 +558,7 @@ export const enum CurlSslVersion {
   TlsV1_3 = 7,
   MaxDefault = 65536
 }
-export const enum UrlIpResolve {
+export const enum CurlIpResolve {
   Whatever = 0,
   V4 = 1,
   V6 = 2
@@ -667,17 +667,25 @@ export declare class Curl {
   setCookies(cookie: string): void
   status(): number
 }
-export type CurlMulti = CurlMulti2
-export declare class CurlMulti2 {
+export declare class CurlMulti {
+  closed: boolean
   constructor()
-  setSocketCallback(callback: (err: null | Error, result: {curl_id:string,socket:number,what:number}) => void): void
-  setTimerCallback(callback: (err: null | Error, result: {multi_id:string,timeout_ms:number}) => void): void
+  setSocketCallback(callback: (result: {curl_id:string,sockfd:number,what:number}) => void): void
+  setTimerCallback(callback: (result: {multi_id:string,timeout_ms:number}) => void): void
   addHandle(curl: Curl): number
   removeHandle(curl: Curl): number
   error(err: number): string
   perform(): number
   getRunningHandles(): number
-  socketAction(socket: c_int, what: c_int): number
+  socketAction(socket: number, what: number): number
   infoRead(): CurlMsgResult | null
   close(): void
+}
+export declare class AsyncEventLoop {
+  constructor()
+  addReader(sockfd: number, callback: (sockfd: number, event_type: number) => void): void
+  addWriter(sockfd: number, callback: (sockfd: number, event_type: number) => void): void
+  removeReader(sockfd: number): void
+  removeWriter(sockfd: number): void
+  callLater(callback: (result: number) => void): string
 }

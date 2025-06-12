@@ -7,4 +7,4 @@ pub mod curl;
 pub mod api;
 pub mod utils;
 pub mod curl_multi;
-// pub mod curl_multi_task;
+pub mod async_loop;

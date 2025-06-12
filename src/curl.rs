@@ -462,14 +462,9 @@ impl Curl {
   }
 
   #[napi]
-  pub fn status(&self) -> i32 {
-    unsafe {
-      (self.lib.easy_getinfo)(
-        self.handle,
-        CurlInfo::ResponseCode as c_int,
-        std::ptr::null_mut(),
-      )
-    }
+  pub fn status(&self) -> Result<i32> {
+    let result=self.get_info_number(CurlInfo::ResponseCode)?;
+    Ok(result as i32)
   }
 }
 
