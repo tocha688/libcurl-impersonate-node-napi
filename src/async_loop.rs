@@ -320,7 +320,7 @@ impl AsyncEventLoop {
   unsafe fn create_tcp_stream_from_fd(fd: i32) -> std::io::Result<TcpStream> {
     use std::os::windows::io::FromRawSocket;
     // 先创建 std::net::TcpStream，然后转换为 tokio::net::TcpStream
-    let std_stream = std::net::TcpStream::from_raw_socket(fd as u64);
+    let std_stream = std::net::TcpStream::from_raw_socket(fd.try_into().unwrap());
     std_stream.set_nonblocking(true)?; // 确保是非阻塞的
     TcpStream::from_std(std_stream)
   }
