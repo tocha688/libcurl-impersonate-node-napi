@@ -1,7 +1,7 @@
 use napi::threadsafe_function::{
   ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
 };
-use napi::{Env, JsFunction, Result};
+use napi::{JsFunction, Result};
 use napi_derive::napi;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
