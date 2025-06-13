@@ -236,7 +236,7 @@ impl Curl {
     }
     Ok(())
   }
-  
+
   /// 设置字符串选项
   #[napi]
   pub fn set_opt_string(&self, option: CurlOpt, value: String) -> Result<()> {
@@ -265,6 +265,17 @@ impl Curl {
   #[napi]
   pub fn set_opt_buffer(&self, option: CurlOpt, body: Buffer) -> Result<()> {
     self.set_opt(option, body.as_ptr() as *const c_void)
+  }
+
+  fn result(&self, code: i32) -> Result<()> {
+    if code != 0 {
+      Err(Error::new(
+        Status::GenericFailure,
+        format!("failed with code: {} message:{}", code, self.error(code)),
+      ))
+    } else {
+      Ok(())
+    }
   }
 
   pub fn get_info(&self, info: CurlInfo, value: *mut c_void) -> Result<()> {
@@ -302,17 +313,17 @@ impl Curl {
 
   /// 模拟浏览器
   #[napi]
-  pub fn impersonate(&self, target: String, default_headers: Option<bool>) -> i32 {
+  pub fn impersonate(&self, target: String, default_headers: Option<bool>) -> Result<()> {
     let target_cstr = std::ffi::CString::new(target).unwrap();
     let use_default_headers = default_headers.unwrap_or(true);
 
-    unsafe {
+    self.result(unsafe {
       (self.lib.easy_impersonate)(
         self.handle,
         target_cstr.as_ptr(),
         if use_default_headers { 1 } else { 0 },
       )
-    }
+    })
   }
 
   /// 获取错误信息字符串
@@ -372,10 +383,10 @@ impl Curl {
 
   /// 执行 curl 请求
   #[napi]
-  pub fn perform(&self) -> i32 {
+  pub fn perform(&self) -> Result<()> {
     // 确保数据回调已初始化
     self.init();
-    unsafe { (self.lib.easy_perform)(self.handle) }
+    self.result(unsafe { (self.lib.easy_perform)(self.handle) })
   }
 
   /// 获取响应头数据
@@ -469,7 +480,7 @@ impl Curl {
 
   #[napi]
   pub fn status(&self) -> Result<i32> {
-    let result=self.get_info_number(CurlInfo::ResponseCode)?;
+    let result = self.get_info_number(CurlInfo::ResponseCode)?;
     Ok(result as i32)
   }
 }

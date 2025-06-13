@@ -641,7 +641,7 @@ export declare class Curl {
   /** 获取字符串信息 */
   getInfoString(option: CurlInfo): string
   /** 模拟浏览器 */
-  impersonate(target: string, defaultHeaders?: boolean | undefined | null): number
+  impersonate(target: string, defaultHeaders?: boolean | undefined | null): void
   /** 获取错误信息字符串 */
   error(code: number): string
   /** 获取curlID */
@@ -653,7 +653,7 @@ export declare class Curl {
   /** 重置 curl */
   reset(): void
   /** 执行 curl 请求 */
-  perform(): number
+  perform(): void
   /** 获取响应头数据 */
   getRespHeaders(): Buffer
   /** 获取响应体数据 */
