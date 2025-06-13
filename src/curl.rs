@@ -1,3 +1,4 @@
+use napi::bindgen_prelude::Buffer;
 use napi::{Error, Result, Status};
 use napi_derive::napi;
 use std::cell::UnsafeCell;
@@ -261,6 +262,11 @@ impl Curl {
     self.set_opt(option, body.as_ptr() as *const c_void)
   }
 
+  #[napi]
+  pub fn set_opt_buffer(&self, option: CurlOpt, body: Buffer) -> Result<()> {
+    self.set_opt(option, body.as_ptr() as *const c_void)
+  }
+
   pub fn get_info(&self, info: CurlInfo, value: *mut c_void) -> Result<()> {
     let result = unsafe { (self.lib.easy_getinfo)(self.handle, info as c_int, value) };
     if result == 0 {
@@ -374,14 +380,14 @@ impl Curl {
 
   /// 获取响应头数据
   #[napi]
-  pub fn get_resp_headers(&self) -> Vec<u8> {
-    unsafe { (*self.header_buffer.get()).clone() }
+  pub fn get_resp_headers(&self) -> Buffer {
+    unsafe { Buffer::from((*self.header_buffer.get()).clone()) }
   }
 
   /// 获取响应体数据
   #[napi]
-  pub fn get_resp_body(&self) -> Vec<u8> {
-    unsafe { (*self.content_buffer.get()).clone() }
+  pub fn get_resp_body(&self) -> Buffer {
+    unsafe { Buffer::from((*self.content_buffer.get()).clone()) }
   }
 
   /// 获取信息数组

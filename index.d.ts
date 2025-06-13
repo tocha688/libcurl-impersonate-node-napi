@@ -635,6 +635,7 @@ export declare class Curl {
   setOptBool(option: CurlOpt, value: boolean): void
   /** 传入bytes */
   setOptBytes(option: CurlOpt, body: Array<number>): void
+  setOptBuffer(option: CurlOpt, body: Buffer): void
   /** 获取响应码 */
   getInfoNumber(option: CurlInfo): number
   /** 获取字符串信息 */
@@ -654,9 +655,9 @@ export declare class Curl {
   /** 执行 curl 请求 */
   perform(): number
   /** 获取响应头数据 */
-  getRespHeaders(): Array<number>
+  getRespHeaders(): Buffer
   /** 获取响应体数据 */
-  getRespBody(): Array<number>
+  getRespBody(): Buffer
   /** 获取信息数组 */
   getInfoList(option: CurlInfo): Array<string>
   /** 设置链表 */
