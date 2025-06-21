@@ -8,3 +8,4 @@ pub mod api;
 pub mod utils;
 pub mod curl_multi;
 pub mod async_loop;
+pub mod logger;

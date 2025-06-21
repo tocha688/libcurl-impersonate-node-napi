@@ -616,6 +616,7 @@ export interface CurlMsgDataResult {
   result: number
 }
 export declare class Curl {
+  closed: boolean
   constructor()
   /** 初始化数据回调 */
   init(): void
@@ -646,8 +647,6 @@ export declare class Curl {
   error(code: number): string
   /** 获取curlID */
   id(): string
-  /** 检查 handle 是否有效 */
-  isValid(): boolean
   /** 清理 curl handle */
   close(): void
   /** 重置 curl */

@@ -5,6 +5,7 @@ use napi_derive::napi;
 
 // CURL 选项常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlOpt {
     WriteData = 10001,
@@ -341,6 +342,7 @@ pub enum CurlOpt {
 
 // CURL 信息常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlInfo {
     Text = 0,
@@ -417,6 +419,7 @@ pub enum CurlInfo {
 
 // CURL Multi 选项常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlMOpt {
     SocketFunction = 20001,
@@ -439,6 +442,7 @@ pub enum CurlMOpt {
 
 // CURL 错误代码常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlError {
     Ok = 0,
@@ -547,6 +551,7 @@ pub enum CurlError {
 
 // HTTP 版本常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlHttpVersion {
     None = 0,
@@ -561,6 +566,7 @@ pub enum CurlHttpVersion {
 
 // WebSocket 标志常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlWsFlag {
     Text = 1,
@@ -573,6 +579,7 @@ pub enum CurlWsFlag {
 
 // SSL 版本常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlSslVersion {
     Default = 0,
@@ -588,6 +595,7 @@ pub enum CurlSslVersion {
 
 // IP 解析常量
 #[repr(u32)]
+#[derive(Debug)]
 #[napi]
 pub enum CurlIpResolve {
     Whatever = 0,
@@ -596,6 +604,7 @@ pub enum CurlIpResolve {
 }
 
 // Impersonate 浏览器类型常量
+#[derive(Debug)]
 #[napi(string_enum)]
 pub enum CurlImpersonate {
     Chrome99,

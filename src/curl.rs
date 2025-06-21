@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
 use crate::loader::CurlSlistNode;
+use crate::log_info;
 use crate::utils::get_ptr_address;
 use crate::{
   constants::{CurlInfo, CurlOpt},
@@ -30,6 +31,7 @@ extern "C" fn write_data(
 
 #[napi]
 pub struct Curl {
+  pub closed: bool,
   handle: CurlHandle,
   lib: &'static CurlFunctions,
   header_buffer: UnsafeCell<Vec<u8>>,
@@ -38,33 +40,34 @@ pub struct Curl {
 }
 
 // 手动实现 Clone - 修正版本
-impl Clone for Curl {
-  fn clone(&self) -> Self {
-    unsafe {
-      let lib = self.lib;
+// impl Clone for Curl {
+//   fn clone(&self) -> Self {
+//     unsafe {
+//       let lib = self.lib;
 
-      // 创建新的 curl handle，而不是复制指针
-      let new_handle = (lib.easy_init)();
-      if new_handle.is_null() {
-        panic!("Failed to create new curl handle in clone");
-      }
+//       // 创建新的 curl handle，而不是复制指针
+//       let new_handle = (lib.easy_init)();
+//       if new_handle.is_null() {
+//         panic!("Failed to create new curl handle in clone");
+//       }
 
-      // 复制当前的数据
-      let header_data = (*self.header_buffer.get()).clone();
-      let content_data = (*self.content_buffer.get()).clone();
+//       // 复制当前的数据
+//       let header_data = (*self.header_buffer.get()).clone();
+//       let content_data = (*self.content_buffer.get()).clone();
 
-      let new_curl = Curl {
-        lib,
-        handle: new_handle,
-        header_buffer: UnsafeCell::new(header_data),
-        content_buffer: UnsafeCell::new(content_data),
-        headers_list: UnsafeCell::new(None), // 新实例不复制 headers 列表
-      };
+//       let new_curl = Curl {
+//         closed: false,
+//         lib,
+//         handle: new_handle,
+//         header_buffer: UnsafeCell::new(header_data),
+//         content_buffer: UnsafeCell::new(content_data),
+//         headers_list: UnsafeCell::new(None), // 新实例不复制 headers 列表
+//       };
 
-      new_curl
-    }
-  }
-}
+//       new_curl
+//     }
+//   }
+// }
 
 // UnsafeCell 需要手动实现 Send 和 Sync
 unsafe impl Send for Curl {}
@@ -86,6 +89,7 @@ impl Curl {
       }
 
       let curl = Curl {
+        closed: false,
         lib,
         handle,
         header_buffer: UnsafeCell::new(Vec::new()),
@@ -100,6 +104,7 @@ impl Curl {
   /// 初始化数据回调
   #[napi]
   pub fn init(&self) {
+    log_info!("Curl", "Initializing curl data callbacks");
     unsafe {
       (*self.header_buffer.get()).clear();
       (*self.content_buffer.get()).clear();
@@ -147,6 +152,17 @@ impl Curl {
     }
   }
 
+  pub fn check_close(&self) -> Result<()> {
+    // Check if the handle is valid
+    if self.closed {
+      return Err(Error::from_reason("Curl instance is closed"));
+    }
+    if self.handle.is_null() {
+      return Err(Error::from_reason("Curl handle is null"));
+    }
+    Ok(())
+  }
+
   /// 设置单个 HTTP 头
   #[napi]
   pub fn add_header(&self, name: String, value: String) -> Result<()> {
@@ -157,6 +173,7 @@ impl Curl {
   /// 设置原始 HTTP 头
   #[napi]
   pub fn add_header_raw(&self, header: String) -> Result<()> {
+    self.check_close()?;
     let header_cstr = std::ffi::CString::new(header)
       .map_err(|_| Error::new(Status::InvalidArg, "Invalid header string"))?;
 
@@ -181,7 +198,7 @@ impl Curl {
 
   #[napi]
   pub fn set_headers(&self, headers: HashMap<String, String>) -> Result<()> {
-    self.clear_headers();
+    let _ = self.clear_headers();
     // 逐个添加 headers
     for (name, value) in headers {
       self.add_header(name, value)?;
@@ -191,7 +208,7 @@ impl Curl {
 
   #[napi]
   pub fn set_headers_raw(&self, headers: Vec<String>) -> Result<()> {
-    self.clear_headers();
+    let _ = self.clear_headers();
     // 逐个添加 headers
     for header in headers {
       self.add_header_raw(header.clone())?;
@@ -201,7 +218,8 @@ impl Curl {
 
   /// 清理所有 HTTP 头
   #[napi]
-  pub fn clear_headers(&self) {
+  pub fn clear_headers(&self) -> Result<()> {
+    self.check_close()?;
     unsafe {
       let headers_list_ptr = self.headers_list.get();
       if let Some(headers_list) = *headers_list_ptr {
@@ -218,23 +236,18 @@ impl Curl {
         std::ptr::null::<c_void>(),
       );
     }
+    Ok(())
   }
 
   pub fn set_opt(&self, option: CurlOpt, value: *const c_void) -> Result<()> {
-    unsafe {
-      let result = (self.lib.easy_setopt)(self.handle, option as c_int, value);
-      if result != 0 {
-        return Err(Error::new(
-          Status::GenericFailure,
-          format!(
-            "curl_easy_setopt failed with code: {} message:{}",
-            result,
-            self.error(result)
-          ),
-        ));
-      }
-    }
-    Ok(())
+    self.check_close()?;
+    log_info!(
+      "Curl",
+      "Setting option: {:?} with value: {:?}",
+      option,
+      value
+    );
+    self.result(unsafe { (self.lib.easy_setopt)(self.handle, option as c_int, value) })
   }
 
   /// 设置字符串选项
@@ -279,19 +292,9 @@ impl Curl {
   }
 
   pub fn get_info(&self, info: CurlInfo, value: *mut c_void) -> Result<()> {
-    let result = unsafe { (self.lib.easy_getinfo)(self.handle, info as c_int, value) };
-    if result == 0 {
-      Ok(())
-    } else {
-      Err(Error::new(
-        Status::GenericFailure,
-        format!(
-          "curl_easy_getinfo failed with code: {} message:{}",
-          result,
-          self.error(result)
-        ),
-      ))
-    }
+    self.check_close()?;
+    log_info!("Curl", "{:?}Get info: {:?} ", self.id(), info);
+    self.result(unsafe { (self.lib.easy_getinfo)(self.handle, info as c_int, value) })
   }
 
   /// 获取响应码
@@ -314,8 +317,15 @@ impl Curl {
   /// 模拟浏览器
   #[napi]
   pub fn impersonate(&self, target: String, default_headers: Option<bool>) -> Result<()> {
-    let target_cstr = std::ffi::CString::new(target).unwrap();
+    self.check_close()?;
+    let target_cstr = std::ffi::CString::new(target.clone()).unwrap();
     let use_default_headers = default_headers.unwrap_or(true);
+    log_info!(
+      "Curl",
+      "Impersonating as: {} with default headers: {}",
+      target,
+      use_default_headers
+    );
 
     self.result(unsafe {
       (self.lib.easy_impersonate)(
@@ -329,6 +339,7 @@ impl Curl {
   /// 获取错误信息字符串
   #[napi]
   pub fn error(&self, code: i32) -> String {
+    log_info!("Curl", "error {}", code);
     unsafe {
       let ptr = (self.lib.easy_strerror)(code);
       let cstr = std::ffi::CStr::from_ptr(ptr);
@@ -350,18 +361,23 @@ impl Curl {
     self.handle
   }
 
-  /// 检查 handle 是否有效
-  #[napi]
-  pub fn is_valid(&self) -> bool {
-    !self.handle.is_null()
-  }
-
   /// 清理 curl handle
   #[napi]
-  pub fn close(&self) {
-    // 先清理 headers
-    self.clear_headers();
+  pub fn close(&mut self) {
+    if self.closed {
+      println!("Warning: curl handle is already closed!");
+      return;
+    }
+    self.closed = true;
+    if self.handle.is_null() {
+      println!("Warning: curl handle is already null!");
+      return;
+    }
 
+    // 先清理 headers
+    let _ = self.clear_headers();
+
+    log_info!("Curl", "easy_cleanup {:?}", self.id());
     unsafe {
       (self.lib.easy_cleanup)(self.handle);
     }
@@ -369,16 +385,19 @@ impl Curl {
 
   /// 重置 curl
   #[napi]
-  pub fn reset(&self) {
+  pub fn reset(&self) -> Result<()> {
+    self.check_close()?;
+    log_info!("Curl", "easy_reset");
     unsafe {
       (*self.header_buffer.get()).clear();
       (*self.content_buffer.get()).clear();
 
       // 清理 headers
-      self.clear_headers();
+      let _ = self.clear_headers();
 
       (self.lib.easy_reset)(self.handle);
     }
+    Ok(())
   }
 
   /// 执行 curl 请求
@@ -386,6 +405,7 @@ impl Curl {
   pub fn perform(&self) -> Result<()> {
     // 确保数据回调已初始化
     self.init();
+    log_info!("Curl", "perform");
     self.result(unsafe { (self.lib.easy_perform)(self.handle) })
   }
 
@@ -404,6 +424,8 @@ impl Curl {
   /// 获取信息数组
   #[napi]
   pub fn get_info_list(&self, option: CurlInfo) -> Result<Vec<String>> {
+    self.check_close()?;
+    log_info!("Curl", "get_info_list {:?}", option);
     let mut cookie_list: CurlSlist = std::ptr::null_mut();
     self.get_info(option, &mut cookie_list as *mut _ as *mut c_void)?;
     let mut cookies = Vec::new();
@@ -439,6 +461,8 @@ impl Curl {
   /// 设置链表
   #[napi]
   pub fn set_opt_list(&self, option: CurlOpt, arrays: Vec<String>) -> Result<()> {
+    self.check_close()?;
+    log_info!("Curl", "set_opt_list {:?}", option);
     let mut list_ptr: CurlSlist = std::ptr::null_mut();
 
     for item in arrays {
@@ -473,6 +497,7 @@ impl Curl {
   /// 设置 cookie
   #[napi]
   pub fn set_cookies(&self, cookie: String) -> Result<()> {
+    self.check_close()?;
     let cookie_cstr = std::ffi::CString::new(cookie)
       .map_err(|_| Error::new(Status::InvalidArg, "Invalid cookie string"))?;
     self.set_opt(CurlOpt::Cookie, cookie_cstr.as_ptr() as *const c_void)

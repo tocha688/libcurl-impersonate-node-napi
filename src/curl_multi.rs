@@ -15,6 +15,8 @@ use crate::{
   loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle},
   utils::get_ptr_address,
 };
+use crate::log_info;
+
 
 #[napi(object)]
 pub struct CurlMsgResult {
@@ -117,8 +119,20 @@ impl CurlMulti {
   //   Ok(())
   // }
 
+  pub fn check_close(&self)->Result<()> {
+    if self.closed {
+      return Err(Error::from_reason("CurlMulti has been closed"));
+    }
+    // Check if the handle is valid
+    if self.raw.handle.is_null() {
+      return Err(Error::from_reason("Curl multi handle is null"));
+    }
+    Ok(())
+  }
+
   #[napi(ts_args_type = "callback: (result: {curl_id:string,sockfd:number,what:number}) => void")]
   pub fn set_socket_callback(&self, callback: JsFunction) -> Result<()> {
+    self.check_close()?;
     let tsfn: ThreadsafeFunction<SocketData, ErrorStrategy::Fatal> = callback
       .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<SocketData>| {
         let sdata = ctx.value;
@@ -128,9 +142,10 @@ impl CurlMulti {
         obj.set("what", sdata.what)?;
         Ok(vec![obj])
       })?;
-
+    log_info!("CurlMulti", "Setting socket callback");
     if let Ok(mut data) = self.data.lock() {
       data.socket = Box::new(move |sdata| {
+        log_info!("CurlMulti", "Socket callback: curl_id={}, sockfd={}, what={}", sdata.curl_id, sdata.sockfd, sdata.what);
         let _ = tsfn.call(
           sdata,
           napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
@@ -149,6 +164,7 @@ impl CurlMulti {
 
   #[napi(ts_args_type = "callback: (result: {multi_id:string,timeout_ms:number}) => void")]
   pub fn set_timer_callback(&self, callback: JsFunction) -> Result<()> {
+    self.check_close()?;
     let tsfn: ThreadsafeFunction<TimerData, ErrorStrategy::Fatal> = callback
       .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<TimerData>| {
         let tdata = ctx.value;
@@ -157,9 +173,10 @@ impl CurlMulti {
         obj.set("timeout_ms", tdata.timeout_ms)?;
         Ok(vec![obj])
       })?;
-
+    log_info!("CurlMulti", "Setting timer callback");
     if let Ok(mut data) = self.data.lock() {
       data.timer = Box::new(move |tdata| {
+        log_info!("CurlMulti", "Timer callback: multi_id={}, timeout_ms={}", tdata.multi_id, tdata.timeout_ms);
         let _ = tsfn.call(
           tdata,
           napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
@@ -179,25 +196,30 @@ impl CurlMulti {
 
   #[napi]
   pub fn add_handle(&self, curl: &Curl) -> Result<i32> {
+    self.check_close()?;
     let handle = curl.get_handle();
     if handle.is_null() {
       return Err(Error::from_reason("Invalid curl handle"));
     }
     curl.init();
+    log_info!("CurlMulti", "Adding handle: {}", get_ptr_address(handle));
     unsafe { Ok((self.raw.lib.multi_add_handle)(self.raw.handle, handle)) }
   }
 
   #[napi]
   pub fn remove_handle(&self, curl: &Curl) -> Result<i32> {
+    self.check_close()?;
     let handle = curl.get_handle();
     if handle.is_null() {
       return Err(Error::from_reason("Invalid curl handle"));
     }
+    log_info!("CurlMulti", "Removing handle: {}", get_ptr_address(handle));
     unsafe { Ok((self.raw.lib.multi_remove_handle)(self.raw.handle, handle)) }
   }
 
   #[napi]
   pub fn error(&self, err: i64) -> String {
+    log_info!("CurlMulti", "Getting error for code: {}", err);
     unsafe {
       let url_ptr = (self.raw.lib.multi_strerror)(err as c_int);
       let cstr = std::ffi::CStr::from_ptr(url_ptr);
@@ -207,7 +229,9 @@ impl CurlMulti {
 
   #[napi]
   pub fn perform(&self) -> Result<u32> {
+    self.check_close()?;
     let mut remaining = 0;
+    log_info!("CurlMulti", "Performing multi operation");
     unsafe {
       let result = (self.raw.lib.multi_perform)(self.raw.handle, &mut remaining);
       if result != 0 && result != 1 {
@@ -219,7 +243,9 @@ impl CurlMulti {
 
   #[napi]
   pub fn get_running_handles(&self) -> Result<u32> {
+    self.check_close()?;
     let mut remaining = 0;
+    log_info!("CurlMulti", "Getting running handles");
     unsafe {
       let result = (self.raw.lib.multi_perform)(self.raw.handle, &mut remaining);
       if result != 0 && result != 1 {
@@ -234,7 +260,9 @@ impl CurlMulti {
 
   #[napi]
   pub fn socket_action(&mut self, socket: i64, what: i64) -> Result<u32> {
+    self.check_close()?;
     let mut remaining = 0;
+    log_info!("CurlMulti", "Performing socket action: socket={}, what={}", socket, what);
     unsafe {
       let result = (self.raw.lib.multi_socket_action)(
         self.raw.handle,
@@ -251,9 +279,11 @@ impl CurlMulti {
 
   #[napi]
   pub fn info_read(&self) -> Result<Option<CurlMsgResult>> {
+    self.check_close()?;
     if self.raw.handle.is_null() {
       return Err(Error::from_reason("Curl multi handle is null"));
     }
+    log_info!("CurlMulti", "Reading info from multi handle");
 
     let mut msgs_left = 0;
     let msg_ptr = unsafe { (self.raw.lib.multi_info_read)(self.raw.handle, &mut msgs_left) };
@@ -299,8 +329,24 @@ impl CurlMulti {
 
   #[napi]
   pub fn close(&mut self) {
+    if self.closed || self.raw.handle.is_null() {
+      return;
+    }
+    log_info!("CurlMulti", "Closing CurlMulti handle: {}", get_ptr_address(self.raw.handle));
     self.closed = true;
     unsafe {
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::SocketFunction as c_int,
+        std::ptr::null() as *const c_void,
+      );
+
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::TimerFunction as c_int,
+        std::ptr::null() as *const c_void,
+      );
+
       (self.raw.lib.multi_cleanup)(self.raw.handle);
     }
     if let Ok(mut data) = self.data.lock() {
