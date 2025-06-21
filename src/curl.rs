@@ -365,12 +365,10 @@ impl Curl {
   #[napi]
   pub fn close(&mut self) {
     if self.closed {
-      println!("Warning: curl handle is already closed!");
       return;
     }
     self.closed = true;
     if self.handle.is_null() {
-      println!("Warning: curl handle is already null!");
       return;
     }
 
@@ -511,11 +509,11 @@ impl Curl {
 }
 
 // 为了安全，实现 Drop trait 来确保资源正确清理
-// impl Drop for Curl {
-//   fn drop(&mut self) {
-//     if !self.handle.is_null() {
-//       self.close();
-//     }
-//   }
-// }
+impl Drop for Curl {
+  fn drop(&mut self) {
+    if !self.handle.is_null() {
+      self.close();
+    }
+  }
+}
 

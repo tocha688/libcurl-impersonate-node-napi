@@ -1,6 +1,6 @@
 {
   "name": "@tocha688/libcurl-darwin-arm64",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "os": [
     "darwin"
   ],
