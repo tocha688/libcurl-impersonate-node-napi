@@ -2,8 +2,7 @@ use libloading::{Library, Symbol};
 use napi::{Error, Status};
 use once_cell::sync::OnceCell;
 use std::{
-  ffi::c_short,
-  os::raw::{c_char, c_int, c_long, c_uint, c_void},
+  f32::consts::E, ffi::c_short, os::raw::{c_char, c_int, c_long, c_uint, c_void}
 };
 
 use crate::libpath::get_lib_path;
@@ -631,10 +630,14 @@ pub fn is_library_loaded() -> bool {
 }
 
 pub fn napi_load_library() -> napi::Result<&'static CurlFunctions> {
-  load_curl_library().or_else(|_| {
+  load_curl_library().or_else(|e| {
     Err(Error::new(
       Status::GenericFailure,
-      "Failed to load @tocha688/libcurl library. ".to_string() + &get_lib_path().unwrap_or("unknown path".to_string()),
+      format!(
+        "Failed to load @tocha688/libcurl library. Path: {}, Error: {}",
+        get_lib_path().unwrap_or("unknown path".to_string()),
+        e
+      ),
     ))
   })
 }
