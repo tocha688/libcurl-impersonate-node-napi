@@ -1,5 +1,6 @@
-const { getDefaultLibPath,getDefaultDirName } = require("..");
+const { CurlMulti, setLibPath } = require("..");
 
-console.log(getDefaultDirName());
-console.log(getDefaultLibPath());
+console.log(setLibPath("111"))
+const multi = new CurlMulti();
+
 

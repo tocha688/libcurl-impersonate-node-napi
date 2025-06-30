@@ -1,7 +1,10 @@
 use libloading::{Library, Symbol};
 use napi::{Error, Status};
 use once_cell::sync::OnceCell;
-use std::{ffi::c_short, os::raw::{c_char, c_int, c_long, c_uint, c_void}};
+use std::{
+  ffi::c_short,
+  os::raw::{c_char, c_int, c_long, c_uint, c_void},
+};
 
 use crate::libpath::get_lib_path;
 
@@ -58,11 +61,8 @@ pub type CurlSocketCallback = unsafe extern "C" fn(
   socketp: *mut c_void,
 ) -> c_int;
 
-pub type CurlTimerCallback = unsafe extern "C" fn(
-  multi: CurlMultiHandle,
-  timeout_ms: c_long,
-  userp: *mut c_void,
-) -> c_int;
+pub type CurlTimerCallback =
+  unsafe extern "C" fn(multi: CurlMultiHandle, timeout_ms: c_long, userp: *mut c_void) -> c_int;
 
 // pollfd 结构体类型
 #[repr(C)]
@@ -174,14 +174,10 @@ pub type CurlMultiSocketAction = unsafe extern "C" fn(
   ev_bitmask: c_int,
   running_handles: *mut c_int,
 ) -> c_int;
-pub type CurlMultiSocketAll = unsafe extern "C" fn(
-  multi_handle: CurlMultiHandle,
-  running_handles: *mut c_int,
-) -> c_int;
-pub type CurlMultiTimeout = unsafe extern "C" fn(
-  multi_handle: CurlMultiHandle,
-  timeout: *mut c_long,
-) -> c_int;
+pub type CurlMultiSocketAll =
+  unsafe extern "C" fn(multi_handle: CurlMultiHandle, running_handles: *mut c_int) -> c_int;
+pub type CurlMultiTimeout =
+  unsafe extern "C" fn(multi_handle: CurlMultiHandle, timeout: *mut c_long) -> c_int;
 pub type CurlMultiFdset = unsafe extern "C" fn(
   multi_handle: CurlMultiHandle,
   read_fd_set: *mut c_void,
@@ -189,11 +185,8 @@ pub type CurlMultiFdset = unsafe extern "C" fn(
   exc_fd_set: *mut c_void,
   max_fd: *mut c_int,
 ) -> c_int;
-pub type CurlMultiAssign = unsafe extern "C" fn(
-  multi_handle: CurlMultiHandle,
-  sockfd: c_int,
-  sockp: *mut c_void,
-) -> c_int;
+pub type CurlMultiAssign =
+  unsafe extern "C" fn(multi_handle: CurlMultiHandle, sockfd: c_int, sockp: *mut c_void) -> c_int;
 pub type CurlMultiGetHandles =
   unsafe extern "C" fn(multi_handle: CurlMultiHandle) -> *mut CurlHandle;
 pub type CurlMultiWaitfds = unsafe extern "C" fn(
@@ -204,7 +197,8 @@ pub type CurlMultiWaitfds = unsafe extern "C" fn(
 ) -> c_int;
 
 // Slist functions
-pub type CurlSlistAppend = unsafe extern "C" fn(list: CurlSlist, string: *const c_char) -> CurlSlist;
+pub type CurlSlistAppend =
+  unsafe extern "C" fn(list: CurlSlist, string: *const c_char) -> CurlSlist;
 pub type CurlSlistFreeAll = unsafe extern "C" fn(list: CurlSlist);
 
 // MIME API 函数类型
@@ -212,21 +206,28 @@ pub type CurlMimeInit = unsafe extern "C" fn(easy: CurlHandle) -> CurlMime;
 pub type CurlMimeFree = unsafe extern "C" fn(mime: CurlMime);
 pub type CurlMimeAddpart = unsafe extern "C" fn(mime: CurlMime) -> CurlMimepart;
 pub type CurlMimeName = unsafe extern "C" fn(part: CurlMimepart, name: *const c_char) -> c_int;
-pub type CurlMimeData = unsafe extern "C" fn(part: CurlMimepart, data: *const c_char, datasize: usize) -> c_int;
-pub type CurlMimeDataCb = unsafe extern "C" fn(part: CurlMimepart, readfunc: ReadCallback, seekfunc: *mut c_void, freefunc: *mut c_void, arg: *mut c_void) -> c_int;
-pub type CurlMimeEncoder = unsafe extern "C" fn(part: CurlMimepart, encoding: *const c_char) -> c_int;
-pub type CurlMimeFiledata = unsafe extern "C" fn(part: CurlMimepart, filename: *const c_char) -> c_int;
-pub type CurlMimeFilename = unsafe extern "C" fn(part: CurlMimepart, filename: *const c_char) -> c_int;
+pub type CurlMimeData =
+  unsafe extern "C" fn(part: CurlMimepart, data: *const c_char, datasize: usize) -> c_int;
+pub type CurlMimeDataCb = unsafe extern "C" fn(
+  part: CurlMimepart,
+  readfunc: ReadCallback,
+  seekfunc: *mut c_void,
+  freefunc: *mut c_void,
+  arg: *mut c_void,
+) -> c_int;
+pub type CurlMimeEncoder =
+  unsafe extern "C" fn(part: CurlMimepart, encoding: *const c_char) -> c_int;
+pub type CurlMimeFiledata =
+  unsafe extern "C" fn(part: CurlMimepart, filename: *const c_char) -> c_int;
+pub type CurlMimeFilename =
+  unsafe extern "C" fn(part: CurlMimepart, filename: *const c_char) -> c_int;
 pub type CurlMimeHeaders = unsafe extern "C" fn(part: CurlMimepart, headers: CurlSlist) -> c_int;
 pub type CurlMimeSubparts = unsafe extern "C" fn(part: CurlMimepart, subparts: CurlMime) -> c_int;
 pub type CurlMimeType = unsafe extern "C" fn(part: CurlMimepart, mimetype: *const c_char) -> c_int;
 
 // Form API 函数类型
-pub type CurlFormadd = unsafe extern "C" fn(
-  httppost: *mut CurlHttpPost,
-  last_post: *mut CurlHttpPost,
-  ...
-) -> c_int;
+pub type CurlFormadd =
+  unsafe extern "C" fn(httppost: *mut CurlHttpPost, last_post: *mut CurlHttpPost, ...) -> c_int;
 pub type CurlFormfree = unsafe extern "C" fn(form: CurlHttpPost);
 pub type CurlFormget = unsafe extern "C" fn(
   form: CurlHttpPost,
@@ -270,11 +271,8 @@ pub type CurlGlobalInitMem = unsafe extern "C" fn(
   c: unsafe extern "C" fn(*mut c_void, usize),
 ) -> c_int;
 pub type CurlGlobalCleanup = unsafe extern "C" fn();
-pub type CurlGlobalSslset = unsafe extern "C" fn(
-  id: c_int,
-  name: *const c_char,
-  avail: *mut *const c_void,
-) -> c_int;
+pub type CurlGlobalSslset =
+  unsafe extern "C" fn(id: c_int, name: *const c_char, avail: *mut *const c_void) -> c_int;
 pub type CurlGlobalTrace = unsafe extern "C" fn(config: *const c_char) -> c_int;
 pub type CurlVersion = unsafe extern "C" fn() -> *const c_char;
 pub type CurlVersionInfo = unsafe extern "C" fn(age: c_int) -> *mut c_void;
@@ -284,10 +282,12 @@ pub type CurlFree = unsafe extern "C" fn(p: *mut c_void);
 
 // 字符串处理函数类型
 pub type CurlStrequal = unsafe extern "C" fn(s1: *const c_char, s2: *const c_char) -> c_int;
-pub type CurlStrnequal = unsafe extern "C" fn(s1: *const c_char, s2: *const c_char, n: usize) -> c_int;
+pub type CurlStrnequal =
+  unsafe extern "C" fn(s1: *const c_char, s2: *const c_char, n: usize) -> c_int;
 
 // 时间函数类型
-pub type CurlGetdate = unsafe extern "C" fn(datestring: *const c_char, now: *const c_long) -> c_long;
+pub type CurlGetdate =
+  unsafe extern "C" fn(datestring: *const c_char, now: *const c_long) -> c_long;
 
 // 环境函数类型
 pub type CurlGetenv = unsafe extern "C" fn(variable: *const c_char) -> *mut c_char;
@@ -304,8 +304,7 @@ pub type CurlMvaprintf =
   unsafe extern "C" fn(format: *const c_char, args: *mut c_void) -> *mut c_char;
 pub type CurlMvfprintf =
   unsafe extern "C" fn(fd: *mut c_void, format: *const c_char, args: *mut c_void) -> c_int;
-pub type CurlMvprintf =
-  unsafe extern "C" fn(format: *const c_char, args: *mut c_void) -> c_int;
+pub type CurlMvprintf = unsafe extern "C" fn(format: *const c_char, args: *mut c_void) -> c_int;
 pub type CurlMvsnprintf = unsafe extern "C" fn(
   buffer: *mut c_char,
   maxlength: usize,
@@ -540,7 +539,7 @@ pub fn load_curl_library() -> Result<&'static CurlFunctions, Box<dyn std::error:
       slist_append: unsafe { lib_static.get(b"curl_slist_append\0")? },
       slist_free_all: unsafe { lib_static.get(b"curl_slist_free_all\0")? },
 
-      // MIME - 完整版本  
+      // MIME - 完整版本
       mime_init: unsafe { lib_static.get(b"curl_mime_init\0")? },
       mime_free: unsafe { lib_static.get(b"curl_mime_free\0")? },
       mime_addpart: unsafe { lib_static.get(b"curl_mime_addpart\0")? },
@@ -635,7 +634,7 @@ pub fn napi_load_library() -> napi::Result<&'static CurlFunctions> {
   load_curl_library().or_else(|_| {
     Err(Error::new(
       Status::GenericFailure,
-      "Failed to load @tocha688/libcurl library",
+      "Failed to load @tocha688/libcurl library. ".to_string() + &get_lib_path().unwrap_or("unknown path".to_string()),
     ))
   })
 }
