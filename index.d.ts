@@ -670,6 +670,15 @@ export declare class Curl {
 export declare class CurlMulti {
   closed: boolean
   constructor()
+  /** 设置字符串选项 */
+  setOptString(option: CurlMOpt, value: string): void
+  /** 设置长整型选项 */
+  setOptLong(option: CurlMOpt, value: number): void
+  /** 设置boolean */
+  setOptBool(option: CurlMOpt, value: boolean): void
+  /** 传入bytes */
+  setOptBytes(option: CurlMOpt, body: Array<number>): void
+  setOptBuffer(option: CurlMOpt, body: Buffer): void
   setSocketCallback(callback: (result: {curl_id:string,sockfd:number,what:number}) => void): void
   setTimerCallback(callback: (result: {multi_id:string,timeout_ms:number}) => void): void
   addHandle(curl: Curl): number

@@ -85,6 +85,57 @@ impl CurlMulti {
     Ok(multi)
   }
 
+  fn result(&self, code: i32) -> Result<()> {
+    if code != 0 {
+      Err(Error::new(
+        Status::GenericFailure,
+        format!("failed with code: {} message:{}", code, self.error(code.into())),
+      ))
+    } else {
+      Ok(())
+    }
+  }
+
+  pub fn set_opt(&self, option: CurlMOpt, value: *const c_void) -> Result<()> {
+    self.check_close()?;
+    log_info!(
+      "Curl",
+      "Setting option: {:?} with value: {:?}",
+      option,
+      value
+    );
+    self.result(unsafe { (self.raw.lib.multi_setopt)(self.raw.handle, option as c_int, value) })
+  }
+  /// 设置字符串选项
+  #[napi]
+  pub fn set_opt_string(&self, option: CurlMOpt, value: String) -> Result<()> {
+    let c_str = std::ffi::CString::new(value).unwrap();
+    self.set_opt(option, c_str.as_ptr() as *const c_void)
+  }
+
+  /// 设置长整型选项
+  #[napi]
+  pub fn set_opt_long(&self, option: CurlMOpt, value: i64) -> Result<()> {
+    self.set_opt(option, value as *const c_void)
+  }
+
+  /// 设置boolean
+  #[napi]
+  pub fn set_opt_bool(&self, option: CurlMOpt, value: bool) -> Result<()> {
+    self.set_opt(option, if value { 1 } else { 0 } as *const c_void)
+  }
+
+  /// 传入bytes
+  #[napi]
+  pub fn set_opt_bytes(&self, option: CurlMOpt, body: Vec<u8>) -> Result<()> {
+    self.set_opt(option, body.as_ptr() as *const c_void)
+  }
+
+  #[napi]
+  pub fn set_opt_buffer(&self, option: CurlMOpt, body: Buffer) -> Result<()> {
+    self.set_opt(option, body.as_ptr() as *const c_void)
+  }
+
   // fn setup_default_callbacks(&self) -> Result<()> {
   //   unsafe {
   //     let result = (self.raw.lib.multi_setopt)(
@@ -95,13 +146,13 @@ impl CurlMulti {
   //     if result != 0 {
   //       return Err(Error::from_reason("Failed to set socket function"));
   //     }
-
+  //
   //     let ptr = Arc::into_raw(self.data.clone()) as *const c_void;
   //     let result = (self.raw.lib.multi_setopt)(self.raw.handle, CurlMOpt::SocketData as c_int, ptr);
   //     if result != 0 {
   //       return Err(Error::from_reason("Failed to set socket data"));
   //     }
-
+  //
   //     let result = (self.raw.lib.multi_setopt)(
   //       self.raw.handle,
   //       CurlMOpt::TimerFunction as c_int,
@@ -110,7 +161,7 @@ impl CurlMulti {
   //     if result != 0 {
   //       return Err(Error::from_reason("Failed to set timer function"));
   //     }
-
+  //
   //     let result = (self.raw.lib.multi_setopt)(self.raw.handle, CurlMOpt::TimerData as c_int, ptr);
   //     if result != 0 {
   //       return Err(Error::from_reason("Failed to set timer data"));
