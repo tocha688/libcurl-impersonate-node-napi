@@ -1,4 +1,4 @@
-const { setLibPath, getLibPath, Curl, CurlOpt, globalInit, CurlInfo, CurlMulti2 } = require("..")
+const { setLibPath, getLibPath, Curl, CurlOpt, globalInit, CurlInfo, CurlMulti } = require("..")
 const path = require("path")
 
 setLibPath(path.join(process.cwd(), `/libs/x86_64-win32/bin/libcurl.dll`))
@@ -15,53 +15,52 @@ curl.setOptLong(CurlOpt.SslVerifyPeer, 0)
 curl.setOptLong(CurlOpt.SslVerifyHost, 0)
 curl.impersonate("chrome136", true)
 
-console.log("Curl 1 is valid:", curl.isValid())
-
 
 console.log("Creating Multi instance...")
-const multi = new CurlMulti2()
+const multi = new CurlMulti()
 
-let completed = 0
-const total = 2
 
-function checkComplete() {
-    if (completed >= total) {
-        console.log("All requests completed!")
-        process.exit(0)
-    }
-}
-const CURL_SOCKET_TIMEOUT = -1;
-multi.setSocketCallback((err, data) => {
-    console.log(`Socket Callback`, data)
-})
-multi.setTimerCallback((err, data) => {
-    console.log(`Timer Callback`, data)
-})
-
-console.log("Adding curl handle...")
 multi.addHandle(curl)
-
-console.log("Starting initial perform...")
 let remaining = multi.perform()
-console.log(`Initial perform result: ${remaining} transfers remaining`)
-
-console.log("Requests started, waiting for completion...")
-
 // 持续调用 perform 来驱动请求完成
 const performInterval = setInterval(() => {
     try {
         const prevRemaining = remaining
         remaining = multi.perform()
         console.log(`Perform: ${remaining} transfers remaining (was ${prevRemaining})`)
-
-         //获取信息
-         const info = multi.infoRead()
-         console.log("Info Read:", info)
+        
+        // 检查是否有传输完成
+        if (prevRemaining > remaining || remaining === 0) {
+            console.log("检查完成的传输:", remaining)
+            
+            // 持续读取所有可用的消息
+            let hasMessages = true
+            while (hasMessages) {
+                const info = multi.infoRead()
+                if (info) {
+                    console.log("Info Read:", info)
+                    // 处理完成的传输
+                    if (info.msg === 1) { // CURLMSG_DONE
+                        console.log("传输完成，结果码:", info.data)
+                        // 可以在这里获取响应数据
+                        console.log("响应体:", curl.getRespBody())
+                    }
+                } else {
+                    hasMessages = false
+                }
+            }
+            
+            // 如果没有更多传输在运行，则退出
+            if (remaining === 0) {
+                console.log("所有传输完成")
+                clearInterval(performInterval)
+            }
+        }
     } catch (error) {
         console.error("Error in perform:", error)
         clearInterval(performInterval)
     }
-}, 100) // 每100ms调用一次
+}, 10) // 每10ms调用一次
 
 // 30秒超时
 // setTimeout(() => {

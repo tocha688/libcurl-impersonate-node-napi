@@ -136,40 +136,6 @@ impl CurlMulti {
     self.set_opt(option, body.as_ptr() as *const c_void)
   }
 
-  // fn setup_default_callbacks(&self) -> Result<()> {
-  //   unsafe {
-  //     let result = (self.raw.lib.multi_setopt)(
-  //       self.raw.handle,
-  //       CurlMOpt::SocketFunction as c_int,
-  //       socket_callback as *const c_void,
-  //     );
-  //     if result != 0 {
-  //       return Err(Error::from_reason("Failed to set socket function"));
-  //     }
-  //
-  //     let ptr = Arc::into_raw(self.data.clone()) as *const c_void;
-  //     let result = (self.raw.lib.multi_setopt)(self.raw.handle, CurlMOpt::SocketData as c_int, ptr);
-  //     if result != 0 {
-  //       return Err(Error::from_reason("Failed to set socket data"));
-  //     }
-  //
-  //     let result = (self.raw.lib.multi_setopt)(
-  //       self.raw.handle,
-  //       CurlMOpt::TimerFunction as c_int,
-  //       timer_callback as *const c_void,
-  //     );
-  //     if result != 0 {
-  //       return Err(Error::from_reason("Failed to set timer function"));
-  //     }
-  //
-  //     let result = (self.raw.lib.multi_setopt)(self.raw.handle, CurlMOpt::TimerData as c_int, ptr);
-  //     if result != 0 {
-  //       return Err(Error::from_reason("Failed to set timer data"));
-  //     }
-  //   }
-  //   Ok(())
-  // }
-
   pub fn check_close(&self)->Result<()> {
     if self.closed {
       return Err(Error::from_reason("CurlMulti has been closed"));
