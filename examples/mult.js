@@ -19,6 +19,12 @@ curl.impersonate("chrome136", true)
 console.log("Creating Multi instance...")
 const multi = new CurlMulti()
 
+multi.setSocketCallback((data) => {
+    console.log("Socket Callback:",data)
+})
+multi.setTimerCallback((data) => {
+    console.log("Timer Callback:",data)
+})
 
 multi.addHandle(curl)
 let remaining = multi.perform()

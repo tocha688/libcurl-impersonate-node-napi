@@ -59,6 +59,8 @@ pub struct CurlMulti {
   pub closed: bool,
   raw: Arc<RawMulti>,
   data: Arc<Mutex<MultiData>>,
+  socket_data_ptr: Option<*const Mutex<MultiData>>,
+  timer_data_ptr: Option<*const Mutex<MultiData>>,
 }
 
 #[napi]
@@ -79,6 +81,8 @@ impl CurlMulti {
         timer: Box::new(|_| true),
       })),
       closed: false,
+      socket_data_ptr: None,
+      timer_data_ptr: None,
     };
 
     // multi.setup_default_callbacks()?;
@@ -148,7 +152,7 @@ impl CurlMulti {
   }
 
   #[napi(ts_args_type = "callback: (result: {curl_id:string,sockfd:number,what:number}) => void")]
-  pub fn set_socket_callback(&self, callback: JsFunction) -> Result<()> {
+  pub fn set_socket_callback(&mut self, callback: JsFunction) -> Result<()> {
     self.check_close()?;
     let tsfn: ThreadsafeFunction<SocketData, ErrorStrategy::Fatal> = callback
       .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<SocketData>| {
@@ -168,19 +172,34 @@ impl CurlMulti {
           napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
         );
       });
-      unsafe {
-        (self.raw.lib.multi_setopt)(
-          self.raw.handle,
-          CurlMOpt::SocketFunction as c_int,
-          socket_callback as *const c_void,
-        );
-      }
+    }
+    
+    // 如果之前有设置过回调，先清理旧的指针
+    if let Some(old_ptr) = self.socket_data_ptr {
+      unsafe { Arc::from_raw(old_ptr) };
+    }
+    
+    // 将 Arc 转换为原始指针并传递给 libcurl
+    let data_ptr = Arc::into_raw(Arc::clone(&self.data));
+    self.socket_data_ptr = Some(data_ptr);
+    
+    unsafe {
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::SocketFunction as c_int,
+        socket_callback as *const c_void,
+      );
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::SocketData as c_int,
+        data_ptr as *const c_void,
+      );
     }
     Ok(())
   }
 
   #[napi(ts_args_type = "callback: (result: {multi_id:string,timeout_ms:number}) => void")]
-  pub fn set_timer_callback(&self, callback: JsFunction) -> Result<()> {
+  pub fn set_timer_callback(&mut self, callback: JsFunction) -> Result<()> {
     self.check_close()?;
     let tsfn: ThreadsafeFunction<TimerData, ErrorStrategy::Fatal> = callback
       .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<TimerData>| {
@@ -200,13 +219,28 @@ impl CurlMulti {
         );
         true
       });
-      unsafe {
-        (self.raw.lib.multi_setopt)(
-          self.raw.handle,
-          CurlMOpt::TimerFunction as c_int,
-          timer_callback as *const c_void,
-        );
-      }
+    }
+    
+    // 如果之前有设置过回调，先清理旧的指针
+    if let Some(old_ptr) = self.timer_data_ptr {
+      unsafe { Arc::from_raw(old_ptr) };
+    }
+    
+    // 将 Arc 转换为原始指针并传递给 libcurl
+    let data_ptr = Arc::into_raw(Arc::clone(&self.data));
+    self.timer_data_ptr = Some(data_ptr);
+    
+    unsafe {
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::TimerFunction as c_int,
+        timer_callback as *const c_void,
+      );
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::TimerData as c_int,
+        data_ptr as *const c_void,
+      );
     }
     Ok(())
   }
@@ -351,10 +385,16 @@ impl CurlMulti {
     }
     log_info!("CurlMulti", "Closing CurlMulti handle: {}", get_ptr_address(self.raw.handle));
     self.closed = true;
+    
     unsafe {
       (self.raw.lib.multi_setopt)(
         self.raw.handle,
         CurlMOpt::SocketFunction as c_int,
+        std::ptr::null() as *const c_void,
+      );
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::SocketData as c_int,
         std::ptr::null() as *const c_void,
       );
 
@@ -363,9 +403,23 @@ impl CurlMulti {
         CurlMOpt::TimerFunction as c_int,
         std::ptr::null() as *const c_void,
       );
+      (self.raw.lib.multi_setopt)(
+        self.raw.handle,
+        CurlMOpt::TimerData as c_int,
+        std::ptr::null() as *const c_void,
+      );
 
       (self.raw.lib.multi_cleanup)(self.raw.handle);
     }
+    
+    // 清理分配的指针
+    if let Some(ptr) = self.socket_data_ptr.take() {
+      unsafe { Arc::from_raw(ptr) };
+    }
+    if let Some(ptr) = self.timer_data_ptr.take() {
+      unsafe { Arc::from_raw(ptr) };
+    }
+    
     if let Ok(mut data) = self.data.lock() {
       data.socket = Box::new(|_| {});
       data.timer = Box::new(|_| true);
@@ -394,19 +448,22 @@ extern "C" fn socket_callback(
     return 0;
   }
 
-  let data_ptr = userptr as *const Mutex<MultiData>;
-  let data_arc = unsafe { Arc::from_raw(data_ptr) };
-
-  if let Ok(mut data) = data_arc.try_lock() {
+  // 从原始指针重新构造 Arc，但不释放所有权
+  let data_arc = unsafe { Arc::from_raw(userptr as *const Mutex<MultiData>) };
+  let result = if let Ok(mut data) = data_arc.try_lock() {
     (data.socket)(SocketData {
       curl_id: get_ptr_address(_easy),
       sockfd,
       what,
     });
-  }
-
+    0
+  } else {
+    0
+  };
+  
+  // 重新泄漏 Arc 避免释放内存
   std::mem::forget(data_arc);
-  0
+  result
 }
 
 extern "C" fn timer_callback(
@@ -422,23 +479,19 @@ extern "C" fn timer_callback(
     return 0;
   }
 
-  let data_ptr = userptr as *const Mutex<MultiData>;
-  let data_arc = unsafe { Arc::from_raw(data_ptr) };
-
-  let keep_going = if let Ok(mut data) = data_arc.try_lock() {
-    (data.timer)(TimerData {
+  // 从原始指针重新构造 Arc，但不释放所有权
+  let data_arc = unsafe { Arc::from_raw(userptr as *const Mutex<MultiData>) };
+  let result = if let Ok(mut data) = data_arc.try_lock() {
+    let keep_going = (data.timer)(TimerData {
       multi_id: get_ptr_address(_multi),
       timeout_ms: timeout_ms as i64,
-    })
+    });
+    if keep_going { 0 } else { -1 }
   } else {
-    false
-  };
-
-  std::mem::forget(data_arc);
-
-  if keep_going {
     0
-  } else {
-    -1
-  }
+  };
+  
+  // 重新泄漏 Arc 避免释放内存
+  std::mem::forget(data_arc);
+  result
 }
