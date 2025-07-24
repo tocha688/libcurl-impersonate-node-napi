@@ -615,6 +615,8 @@ export interface CurlMsgDataResult {
   whatever: number
   result: number
 }
+export declare function socketIsReadable(sockfd: number): boolean
+export declare function socketIsWritable(sockfd: number): boolean
 export declare class Curl {
   closed: boolean
   constructor()
@@ -637,6 +639,7 @@ export declare class Curl {
   /** 传入bytes */
   setOptBytes(option: CurlOpt, body: Array<number>): void
   setOptBuffer(option: CurlOpt, body: Buffer): void
+  setOptStrList(option: CurlOpt, arrays: Array<string>): void
   /** 获取响应码 */
   getInfoNumber(option: CurlInfo): number
   /** 获取字符串信息 */
@@ -689,12 +692,4 @@ export declare class CurlMulti {
   socketAction(socket: number, what: number): number
   infoRead(): CurlMsgResult | null
   close(): void
-}
-export declare class AsyncEventLoop {
-  constructor()
-  addReader(sockfd: number, callback: (sockfd: number, event_type: number) => void): void
-  addWriter(sockfd: number, callback: (sockfd: number, event_type: number) => void): void
-  removeReader(sockfd: number): void
-  removeWriter(sockfd: number): void
-  callLater(callback: (result: number) => void): string
 }

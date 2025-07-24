@@ -280,6 +280,12 @@ impl Curl {
     self.set_opt(option, body.as_ptr() as *const c_void)
   }
 
+  #[napi]
+  pub fn set_opt_str_list(&self, option: CurlOpt, arrays: Vec<String>) -> Result<()> {
+    self.check_close()?;
+     self.set_opt(option, arrays.as_ptr() as *const c_void)
+  }
+
   fn result(&self, code: i32) -> Result<()> {
     if code != 0 {
       Err(Error::new(
