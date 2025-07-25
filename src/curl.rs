@@ -39,36 +39,6 @@ pub struct Curl {
   headers_list: UnsafeCell<Option<CurlSlist>>, // 添加 headers 列表管理
 }
 
-// 手动实现 Clone - 修正版本
-// impl Clone for Curl {
-//   fn clone(&self) -> Self {
-//     unsafe {
-//       let lib = self.lib;
-
-//       // 创建新的 curl handle，而不是复制指针
-//       let new_handle = (lib.easy_init)();
-//       if new_handle.is_null() {
-//         panic!("Failed to create new curl handle in clone");
-//       }
-
-//       // 复制当前的数据
-//       let header_data = (*self.header_buffer.get()).clone();
-//       let content_data = (*self.content_buffer.get()).clone();
-
-//       let new_curl = Curl {
-//         closed: false,
-//         lib,
-//         handle: new_handle,
-//         header_buffer: UnsafeCell::new(header_data),
-//         content_buffer: UnsafeCell::new(content_data),
-//         headers_list: UnsafeCell::new(None), // 新实例不复制 headers 列表
-//       };
-
-//       new_curl
-//     }
-//   }
-// }
-
 // UnsafeCell 需要手动实现 Send 和 Sync
 unsafe impl Send for Curl {}
 unsafe impl Sync for Curl {}

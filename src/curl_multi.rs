@@ -157,7 +157,7 @@ impl CurlMulti {
     Ok(())
   }
 
-  #[napi(ts_args_type = "callback: (result: {curl_id:string,sockfd:number,what:number}) => void")]
+  #[napi]
   pub fn set_socket_callback(&mut self, callback: ThreadsafeFunction<SocketData>) -> Result<()> {
     self.check_close()?;
     let tsfn = Arc::new(callback);
@@ -202,7 +202,7 @@ impl CurlMulti {
     Ok(())
   }
 
-  #[napi(ts_args_type = "callback: (result: {multi_id:string,timeout_ms:number}) => void")]
+  #[napi]
   pub fn set_timer_callback(&mut self, callback: ThreadsafeFunction<TimerData>) -> Result<()> {
     self.check_close()?;
     let tsfn = Arc::new(callback);

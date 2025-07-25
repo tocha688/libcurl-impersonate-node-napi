@@ -9,3 +9,4 @@ pub mod utils;
 pub mod curl_multi;
 pub mod socket;
 pub mod logger;
+pub mod callbacks;

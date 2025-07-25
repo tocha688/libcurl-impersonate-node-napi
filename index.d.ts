@@ -67,8 +67,8 @@ export declare class CurlMulti {
   /** 传入bytes */
   setOptBytes(option: CurlMOpt, body: Array<number>): void
   setOptBuffer(option: CurlMOpt, body: Buffer): void
-  setSocketCallback(callback: (result: {curl_id:string,sockfd:number,what:number}) => void): void
-  setTimerCallback(callback: (result: {multi_id:string,timeout_ms:number}) => void): void
+  setSocketCallback(callback: ((err: Error | null, arg: SocketData) => any)): void
+  setTimerCallback(callback: ((err: Error | null, arg: TimerData) => any)): void
   addHandle(curl: Curl): number
   removeHandle(curl: Curl): number
   error(err: number): string

@@ -17,17 +17,17 @@ pub fn socket_is_writable(sockfd: i32) -> bool {
 fn check_readable(sockfd: i32) -> bool {
   use std::mem;
   use std::ptr;
-  
+
   unsafe {
     let mut read_fds: libc::fd_set = mem::zeroed();
     libc::FD_ZERO(&mut read_fds);
     libc::FD_SET(sockfd, &mut read_fds);
-    
+
     let mut timeout = libc::timeval {
       tv_sec: 0,
       tv_usec: 0,
     };
-    
+
     let result = libc::select(
       sockfd + 1,
       &mut read_fds,
@@ -35,7 +35,7 @@ fn check_readable(sockfd: i32) -> bool {
       ptr::null_mut(),
       &mut timeout,
     );
-    
+
     result > 0 && libc::FD_ISSET(sockfd, &read_fds)
   }
 }
@@ -48,12 +48,12 @@ fn check_writable(sockfd: i32) -> bool {
     let mut write_fds: libc::fd_set = mem::zeroed();
     libc::FD_ZERO(&mut write_fds);
     libc::FD_SET(sockfd, &mut write_fds);
-    
+
     let mut timeout = libc::timeval {
       tv_sec: 0,
       tv_usec: 0,
     };
-    
+
     let result = libc::select(
       sockfd + 1,
       ptr::null_mut(),
@@ -61,7 +61,7 @@ fn check_writable(sockfd: i32) -> bool {
       ptr::null_mut(),
       &mut timeout,
     );
-    
+
     result > 0 && libc::FD_ISSET(sockfd, &write_fds)
   }
 }
@@ -71,17 +71,17 @@ fn check_readable(sockfd: i32) -> bool {
   use std::mem;
   use std::ptr;
   use winapi::um::winsock2::{fd_set, timeval, select, SOCKET};
-  
+
   unsafe {
     let mut read_fds: fd_set = mem::zeroed();
     read_fds.fd_count = 1;
     read_fds.fd_array[0] = sockfd as SOCKET;
-    
+
     let mut timeout = timeval {
       tv_sec: 0,
       tv_usec: 0,
     };
-    
+
     let result = select(
       0, // ignored on Windows
       &mut read_fds,
@@ -89,7 +89,7 @@ fn check_readable(sockfd: i32) -> bool {
       ptr::null_mut(),
       &mut timeout,
     );
-    
+
     result > 0
   }
 }
@@ -99,17 +99,17 @@ fn check_writable(sockfd: i32) -> bool {
   use std::mem;
   use std::ptr;
   use winapi::um::winsock2::{fd_set, timeval, select, SOCKET};
-  
+
   unsafe {
     let mut write_fds: fd_set = mem::zeroed();
     write_fds.fd_count = 1;
     write_fds.fd_array[0] = sockfd as SOCKET;
-    
+
     let mut timeout = timeval {
       tv_sec: 0,
       tv_usec: 0,
     };
-    
+
     let result = select(
       0, // ignored on Windows
       ptr::null_mut(),
@@ -117,7 +117,7 @@ fn check_writable(sockfd: i32) -> bool {
       ptr::null_mut(),
       &mut timeout,
     );
-    
+
     result > 0
   }
 }
