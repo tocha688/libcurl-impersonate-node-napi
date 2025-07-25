@@ -5,6 +5,7 @@ use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
+use crate::api::curl_easy_error;
 use crate::loader::CurlSlistNode;
 use crate::log_info;
 use crate::utils::get_ptr_address;
@@ -316,11 +317,7 @@ impl Curl {
   #[napi]
   pub fn error(&self, code: i32) -> String {
     log_info!("Curl", "error {}", code);
-    unsafe {
-      let ptr = (self.lib.easy_strerror)(code);
-      let cstr = std::ffi::CStr::from_ptr(ptr);
-      cstr.to_string_lossy().to_string()
-    }
+    curl_easy_error(code)
   }
 
   /// 获取curlID
@@ -395,11 +392,10 @@ impl Curl {
         let lib = napi_load_library()?;
         let code = (lib.easy_perform)(handle as CurlHandle);
         if code != 0 {
-          let ptr = (lib.easy_strerror)(code);
-          let cstr = std::ffi::CStr::from_ptr(ptr);
+          let error = curl_easy_error(code);
           return Err(Error::from_reason(format!(
-            "failed with code: {}",
-            cstr.to_string_lossy().to_string()
+            "failed with code: {} message:{}",
+            code, error
           )));
         }
         Ok(code)

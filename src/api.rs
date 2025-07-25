@@ -23,7 +23,6 @@ pub fn global_cleanup() -> napi::Result<()> {
   }
 }
 
-
 /// 获取 libcurl 版本信息
 #[napi]
 pub fn get_version() -> napi::Result<String> {
@@ -31,14 +30,29 @@ pub fn get_version() -> napi::Result<String> {
   unsafe {
     let version_ptr = (lib.version)(); // 修正：curl_version() 不需要参数
     if version_ptr.is_null() {
-      return Err(Error::new(
-        Status::GenericFailure,
-        "Failed to get version",
-      ));
+      return Err(Error::new(Status::GenericFailure, "Failed to get version"));
     }
     let version_cstr = std::ffi::CStr::from_ptr(version_ptr);
     Ok(version_cstr.to_string_lossy().to_string())
   }
 }
 
+#[napi]
+pub fn curl_easy_error(code: i32) -> String {
+  let lib = napi_load_library().expect("Failed to load libcurl library");
+  unsafe {
+    let ptr = (lib.easy_strerror)(code);
+    let cstr = std::ffi::CStr::from_ptr(ptr);
+    cstr.to_string_lossy().to_string()
+  }
+}
 
+#[napi]
+pub fn curl_multi_error(code: i32) -> String {
+  let lib = napi_load_library().expect("Failed to load libcurl library");
+  unsafe {
+    let ptr = (lib.multi_strerror)(code);
+    let cstr = std::ffi::CStr::from_ptr(ptr);
+    cstr.to_string_lossy().to_string()
+  }
+}

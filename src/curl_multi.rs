@@ -7,10 +7,7 @@ use napi::{bindgen_prelude::*, threadsafe_function::ThreadsafeFunction};
 use napi_derive::napi;
 
 use crate::{
-  constants::CurlMOpt,
-  curl::Curl,
-  loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle},
-  utils::get_ptr_address,
+  api::curl_multi_error, constants::CurlMOpt, curl::Curl, loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle}, utils::get_ptr_address
 };
 use crate::{loader::CurlWaitFd, log_info};
 
@@ -273,11 +270,7 @@ impl CurlMulti {
   #[napi]
   pub fn error(&self, err: i64) -> String {
     log_info!("CurlMulti", "Getting error for code: {}", err);
-    unsafe {
-      let url_ptr = (self.raw.lib.multi_strerror)(err as c_int);
-      let cstr = std::ffi::CStr::from_ptr(url_ptr);
-      cstr.to_string_lossy().to_string()
-    }
+    curl_multi_error(err as i32)
   }
 
   #[napi]
@@ -313,7 +306,7 @@ impl CurlMulti {
           &mut remaining,
         );
         if code != 0 {
-          return Err(Error::from_reason(format!("failed with code: {}", code)));
+          return Err(Error::from_reason(format!("failed with code: {} message: {}", code, curl_multi_error(code))));
         }
       }
       Ok(remaining)
@@ -341,7 +334,7 @@ impl CurlMulti {
           &mut remaining,
         );
         if code != 0 {
-          return Err(Error::from_reason(format!("failed with code: {}", code)));
+          return Err(Error::from_reason(format!("failed with code: {} message: {}", code, curl_multi_error(code))));
         }
       }
       Ok(remaining)
