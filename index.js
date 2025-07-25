@@ -395,12 +395,14 @@ if (!nativeBinding) {
 module.exports = nativeBinding
 module.exports.Curl = nativeBinding.Curl
 module.exports.CurlMulti = nativeBinding.CurlMulti
+module.exports.curlEasyError = nativeBinding.curlEasyError
 module.exports.CurlError = nativeBinding.CurlError
 module.exports.CurlHttpVersion = nativeBinding.CurlHttpVersion
 module.exports.CurlImpersonate = nativeBinding.CurlImpersonate
 module.exports.CurlInfo = nativeBinding.CurlInfo
 module.exports.CurlIpResolve = nativeBinding.CurlIpResolve
 module.exports.CurlMOpt = nativeBinding.CurlMOpt
+module.exports.curlMultiError = nativeBinding.curlMultiError
 module.exports.CurlOpt = nativeBinding.CurlOpt
 module.exports.CurlSslVersion = nativeBinding.CurlSslVersion
 module.exports.CurlWsFlag = nativeBinding.CurlWsFlag

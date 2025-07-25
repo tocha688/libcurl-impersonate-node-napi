@@ -81,6 +81,8 @@ export declare class CurlMulti {
   close(): void
 }
 
+export declare function curlEasyError(code: number): string
+
 export declare const enum CurlError {
   Ok = 0,
   UnsupportedProtocol = 1,
@@ -341,6 +343,8 @@ export interface CurlMsgResult {
   easyId: string
   data: CurlMsgDataResult
 }
+
+export declare function curlMultiError(code: number): string
 
 export declare const enum CurlOpt {
   WriteData = 10001,
