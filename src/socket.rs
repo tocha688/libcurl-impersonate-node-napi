@@ -17,9 +17,6 @@ pub fn socket_is_writable(sockfd: i32) -> bool {
 fn check_readable(sockfd: i32) -> bool {
   use std::mem;
   use std::ptr;
-  if sockfd < 0 || sockfd >= FD_SETSIZE as i32 {
-    return false;
-  }
   
   unsafe {
     let mut read_fds: libc::fd_set = mem::zeroed();
@@ -47,9 +44,6 @@ fn check_readable(sockfd: i32) -> bool {
 fn check_writable(sockfd: i32) -> bool {
   use std::mem;
   use std::ptr;
-  if sockfd < 0 || sockfd >= FD_SETSIZE as i32 {
-    return false;
-  }
   unsafe {
     let mut write_fds: libc::fd_set = mem::zeroed();
     libc::FD_ZERO(&mut write_fds);
