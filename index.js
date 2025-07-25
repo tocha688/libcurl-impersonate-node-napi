@@ -73,23 +73,23 @@ function requireNative() {
   } else if (process.platform === 'android') {
     if (process.arch === 'arm64') {
       try {
-        return require('./libcurl.android-arm64.node')
+        return require('./libcurl-impersonate.android-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-android-arm64')
+        return require('libcurl-impersonate-android-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./libcurl.android-arm-eabi.node')
+        return require('./libcurl-impersonate.android-arm-eabi.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-android-arm-eabi')
+        return require('libcurl-impersonate-android-arm-eabi')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -99,34 +99,34 @@ function requireNative() {
   } else if (process.platform === 'win32') {
     if (process.arch === 'x64') {
       try {
-        return require('./libcurl.win32-x64-msvc.node')
+        return require('./libcurl-impersonate.win32-x64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-win32-x64-msvc')
+        return require('libcurl-impersonate-win32-x64-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'ia32') {
       try {
-        return require('./libcurl.win32-ia32-msvc.node')
+        return require('./libcurl-impersonate.win32-ia32-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-win32-ia32-msvc')
+        return require('libcurl-impersonate-win32-ia32-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./libcurl.win32-arm64-msvc.node')
+        return require('./libcurl-impersonate.win32-arm64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-win32-arm64-msvc')
+        return require('libcurl-impersonate-win32-arm64-msvc')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -135,34 +135,34 @@ function requireNative() {
     }
   } else if (process.platform === 'darwin') {
     try {
-      return require('./libcurl.darwin-universal.node')
+      return require('./libcurl-impersonate.darwin-universal.node')
     } catch (e) {
       loadErrors.push(e)
     }
     try {
-      return require('@tocha688/libcurl-darwin-universal')
+      return require('libcurl-impersonate-darwin-universal')
     } catch (e) {
       loadErrors.push(e)
     }
     if (process.arch === 'x64') {
       try {
-        return require('./libcurl.darwin-x64.node')
+        return require('./libcurl-impersonate.darwin-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-darwin-x64')
+        return require('libcurl-impersonate-darwin-x64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./libcurl.darwin-arm64.node')
+        return require('./libcurl-impersonate.darwin-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-darwin-arm64')
+        return require('libcurl-impersonate-darwin-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -172,23 +172,23 @@ function requireNative() {
   } else if (process.platform === 'freebsd') {
     if (process.arch === 'x64') {
       try {
-        return require('./libcurl.freebsd-x64.node')
+        return require('./libcurl-impersonate.freebsd-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-freebsd-x64')
+        return require('libcurl-impersonate-freebsd-x64')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./libcurl.freebsd-arm64.node')
+        return require('./libcurl-impersonate.freebsd-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-freebsd-arm64')
+        return require('libcurl-impersonate-freebsd-arm64')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -199,23 +199,23 @@ function requireNative() {
     if (process.arch === 'x64') {
       if (isMusl()) {
         try {
-          return require('./libcurl.linux-x64-musl.node')
+          return require('./libcurl-impersonate.linux-x64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-x64-musl')
+          return require('libcurl-impersonate-linux-x64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./libcurl.linux-x64-gnu.node')
+          return require('./libcurl-impersonate.linux-x64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-x64-gnu')
+          return require('libcurl-impersonate-linux-x64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -223,23 +223,23 @@ function requireNative() {
     } else if (process.arch === 'arm64') {
       if (isMusl()) {
         try {
-          return require('./libcurl.linux-arm64-musl.node')
+          return require('./libcurl-impersonate.linux-arm64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-arm64-musl')
+          return require('libcurl-impersonate-linux-arm64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./libcurl.linux-arm64-gnu.node')
+          return require('./libcurl-impersonate.linux-arm64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-arm64-gnu')
+          return require('libcurl-impersonate-linux-arm64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -247,23 +247,23 @@ function requireNative() {
     } else if (process.arch === 'arm') {
       if (isMusl()) {
         try {
-          return require('./libcurl.linux-arm-musleabihf.node')
+          return require('./libcurl-impersonate.linux-arm-musleabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-arm-musleabihf')
+          return require('libcurl-impersonate-linux-arm-musleabihf')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./libcurl.linux-arm-gnueabihf.node')
+          return require('./libcurl-impersonate.linux-arm-gnueabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-arm-gnueabihf')
+          return require('libcurl-impersonate-linux-arm-gnueabihf')
         } catch (e) {
           loadErrors.push(e)
         }
@@ -271,46 +271,46 @@ function requireNative() {
     } else if (process.arch === 'riscv64') {
       if (isMusl()) {
         try {
-          return require('./libcurl.linux-riscv64-musl.node')
+          return require('./libcurl-impersonate.linux-riscv64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-riscv64-musl')
+          return require('libcurl-impersonate-linux-riscv64-musl')
         } catch (e) {
           loadErrors.push(e)
         }
       } else {
         try {
-          return require('./libcurl.linux-riscv64-gnu.node')
+          return require('./libcurl-impersonate.linux-riscv64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          return require('@tocha688/libcurl-linux-riscv64-gnu')
+          return require('libcurl-impersonate-linux-riscv64-gnu')
         } catch (e) {
           loadErrors.push(e)
         }
       }
     } else if (process.arch === 'ppc64') {
       try {
-        return require('./libcurl.linux-ppc64-gnu.node')
+        return require('./libcurl-impersonate.linux-ppc64-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-linux-ppc64-gnu')
+        return require('libcurl-impersonate-linux-ppc64-gnu')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 's390x') {
       try {
-        return require('./libcurl.linux-s390x-gnu.node')
+        return require('./libcurl-impersonate.linux-s390x-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-linux-s390x-gnu')
+        return require('libcurl-impersonate-linux-s390x-gnu')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -320,34 +320,34 @@ function requireNative() {
   } else if (process.platform === 'openharmony') {
     if (process.arch === 'arm64') {
       try {
-        return require('./libcurl.linux-arm64-ohos.node')
+        return require('./libcurl-impersonate.linux-arm64-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-linux-arm64-ohos')
+        return require('libcurl-impersonate-linux-arm64-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'x64') {
       try {
-        return require('./libcurl.linux-x64-ohos.node')
+        return require('./libcurl-impersonate.linux-x64-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-linux-x64-ohos')
+        return require('libcurl-impersonate-linux-x64-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./libcurl.linux-arm-ohos.node')
+        return require('./libcurl-impersonate.linux-arm-ohos.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        return require('@tocha688/libcurl-linux-arm-ohos')
+        return require('libcurl-impersonate-linux-arm-ohos')
       } catch (e) {
         loadErrors.push(e)
       }
@@ -363,7 +363,7 @@ nativeBinding = requireNative()
 
 if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   try {
-    nativeBinding = require('./libcurl.wasi.cjs')
+    nativeBinding = require('./libcurl-impersonate.wasi.cjs')
   } catch (err) {
     if (process.env.NAPI_RS_FORCE_WASI) {
       loadErrors.push(err)
@@ -371,7 +371,7 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   }
   if (!nativeBinding) {
     try {
-      nativeBinding = require('@tocha688/libcurl-wasm32-wasi')
+      nativeBinding = require('libcurl-impersonate-wasm32-wasi')
     } catch (err) {
       if (process.env.NAPI_RS_FORCE_WASI) {
         loadErrors.push(err)
