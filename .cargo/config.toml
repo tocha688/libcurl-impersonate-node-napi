@@ -3,8 +3,6 @@ linker = "aarch64-linux-musl-gcc"
 rustflags = ["-C", "target-feature=-crt-static"]
 [target.armv7-unknown-linux-gnueabihf]
 linker = "arm-linux-gnueabihf-gcc"
-[target.armv7-unknown-linux-musleabihf]
-linker = "rust-lld"
-rustflags = ["-C", "target-feature=+crt-static", "-C", "link-self-contained=yes"]
+
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]
