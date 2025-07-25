@@ -507,10 +507,6 @@ extern "C" fn socket_callback(
   userptr: *mut c_void,
   _socketp: *mut c_void,
 ) -> c_int {
-  // println!(
-  //   "socket_callback called: easy={:p}, sockfd={}, what={}",
-  //   _easy, sockfd, what
-  // );
   if userptr.is_null() {
     return 0;
   }
@@ -538,10 +534,6 @@ extern "C" fn timer_callback(
   timeout_ms: c_long,
   userptr: *mut c_void,
 ) -> c_int {
-  // println!(
-  //   "timer_callback called: multi={:p}, timeout_ms={}",
-  //   _multi, timeout_ms
-  // );
   if userptr.is_null() {
     return 0;
   }
