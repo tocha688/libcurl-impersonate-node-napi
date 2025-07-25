@@ -35,9 +35,11 @@ curl.addHeader("h2","w1")
 
 console.log("Starting request...")
 
-
+setInterval(()=>{
+    console.log("Request is still running...")
+}, 100)
 // 执行请求 - 同步等待完成
-let res = curl.perform()
+let res = await curl.perform()
 
 console.log("Request completed!")
 console.log("Response:", res)

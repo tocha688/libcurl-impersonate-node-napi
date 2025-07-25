@@ -641,3 +641,4 @@ pub fn napi_load_library() -> napi::Result<&'static CurlFunctions> {
     ))
   })
 }
+

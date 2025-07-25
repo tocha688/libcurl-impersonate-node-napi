@@ -3,10 +3,7 @@ use std::{
   sync::{Arc, Mutex},
 };
 
-use napi::{
-  bindgen_prelude::*,
-  threadsafe_function::{ErrorStrategy, ThreadSafeCallContext, ThreadsafeFunction},
-};
+use napi::{bindgen_prelude::*, threadsafe_function::ThreadsafeFunction};
 use napi_derive::napi;
 
 use crate::{
@@ -15,8 +12,7 @@ use crate::{
   loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle},
   utils::get_ptr_address,
 };
-use crate::log_info;
-
+use crate::{loader::CurlWaitFd, log_info};
 
 #[napi(object)]
 pub struct CurlMsgResult {
@@ -32,12 +28,14 @@ pub struct CurlMsgDataResult {
   pub result: i32,
 }
 
+#[napi(object)]
 pub struct SocketData {
   pub curl_id: String,
   pub sockfd: i32,
   pub what: i32,
 }
 
+#[napi(object)]
 pub struct TimerData {
   pub multi_id: String,
   pub timeout_ms: i64,
@@ -62,6 +60,10 @@ pub struct CurlMulti {
   socket_data_ptr: Option<*const Mutex<MultiData>>,
   timer_data_ptr: Option<*const Mutex<MultiData>>,
 }
+
+// 手动实现 Send 和 Sync trait
+unsafe impl Send for CurlMulti {}
+unsafe impl Sync for CurlMulti {}
 
 #[napi]
 impl CurlMulti {
@@ -93,7 +95,11 @@ impl CurlMulti {
     if code != 0 {
       Err(Error::new(
         Status::GenericFailure,
-        format!("failed with code: {} message:{}", code, self.error(code.into())),
+        format!(
+          "failed with code: {} message:{}",
+          code,
+          self.error(code.into())
+        ),
       ))
     } else {
       Ok(())
@@ -140,7 +146,7 @@ impl CurlMulti {
     self.set_opt(option, body.as_ptr() as *const c_void)
   }
 
-  pub fn check_close(&self)->Result<()> {
+  pub fn check_close(&self) -> Result<()> {
     if self.closed {
       return Err(Error::from_reason("CurlMulti has been closed"));
     }
@@ -152,37 +158,35 @@ impl CurlMulti {
   }
 
   #[napi(ts_args_type = "callback: (result: {curl_id:string,sockfd:number,what:number}) => void")]
-  pub fn set_socket_callback(&mut self, callback: JsFunction) -> Result<()> {
+  pub fn set_socket_callback(&mut self, callback: ThreadsafeFunction<SocketData>) -> Result<()> {
     self.check_close()?;
-    let tsfn: ThreadsafeFunction<SocketData, ErrorStrategy::Fatal> = callback
-      .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<SocketData>| {
-        let sdata = ctx.value;
-        let mut obj = ctx.env.create_object()?;
-        obj.set("curl_id", sdata.curl_id)?;
-        obj.set("sockfd", sdata.sockfd)?;
-        obj.set("what", sdata.what)?;
-        Ok(vec![obj])
-      })?;
+    let tsfn = Arc::new(callback);
     log_info!("CurlMulti", "Setting socket callback");
     if let Ok(mut data) = self.data.lock() {
       data.socket = Box::new(move |sdata| {
-        log_info!("CurlMulti", "Socket callback: curl_id={}, sockfd={}, what={}", sdata.curl_id, sdata.sockfd, sdata.what);
+        log_info!(
+          "CurlMulti",
+          "Socket callback: curl_id={}, sockfd={}, what={}",
+          sdata.curl_id,
+          sdata.sockfd,
+          sdata.what
+        );
         let _ = tsfn.call(
-          sdata,
+          Ok(sdata),
           napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
         );
       });
     }
-    
+
     // 如果之前有设置过回调，先清理旧的指针
     if let Some(old_ptr) = self.socket_data_ptr {
       unsafe { Arc::from_raw(old_ptr) };
     }
-    
+
     // 将 Arc 转换为原始指针并传递给 libcurl
     let data_ptr = Arc::into_raw(Arc::clone(&self.data));
     self.socket_data_ptr = Some(data_ptr);
-    
+
     unsafe {
       (self.raw.lib.multi_setopt)(
         self.raw.handle,
@@ -199,37 +203,35 @@ impl CurlMulti {
   }
 
   #[napi(ts_args_type = "callback: (result: {multi_id:string,timeout_ms:number}) => void")]
-  pub fn set_timer_callback(&mut self, callback: JsFunction) -> Result<()> {
+  pub fn set_timer_callback(&mut self, callback: ThreadsafeFunction<TimerData>) -> Result<()> {
     self.check_close()?;
-    let tsfn: ThreadsafeFunction<TimerData, ErrorStrategy::Fatal> = callback
-      .create_threadsafe_function(0, |ctx: ThreadSafeCallContext<TimerData>| {
-        let tdata = ctx.value;
-        let mut obj = ctx.env.create_object()?;
-        obj.set("multi_id", tdata.multi_id)?;
-        obj.set("timeout_ms", tdata.timeout_ms)?;
-        Ok(vec![obj])
-      })?;
+    let tsfn = Arc::new(callback);
     log_info!("CurlMulti", "Setting timer callback");
     if let Ok(mut data) = self.data.lock() {
       data.timer = Box::new(move |tdata| {
-        log_info!("CurlMulti", "Timer callback: multi_id={}, timeout_ms={}", tdata.multi_id, tdata.timeout_ms);
+        log_info!(
+          "CurlMulti",
+          "Timer callback: multi_id={}, timeout_ms={}",
+          tdata.multi_id,
+          tdata.timeout_ms
+        );
         let _ = tsfn.call(
-          tdata,
+          Ok(tdata),
           napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
         );
         true
       });
     }
-    
+
     // 如果之前有设置过回调，先清理旧的指针
     if let Some(old_ptr) = self.timer_data_ptr {
       unsafe { Arc::from_raw(old_ptr) };
     }
-    
+
     // 将 Arc 转换为原始指针并传递给 libcurl
     let data_ptr = Arc::into_raw(Arc::clone(&self.data));
     self.timer_data_ptr = Some(data_ptr);
-    
+
     unsafe {
       (self.raw.lib.multi_setopt)(
         self.raw.handle,
@@ -279,7 +281,7 @@ impl CurlMulti {
   }
 
   #[napi]
-  pub fn perform(&self) -> Result<u32> {
+  pub fn perform(&self) -> Result<i32> {
     self.check_close()?;
     let mut remaining = 0;
     log_info!("CurlMulti", "Performing multi operation");
@@ -289,11 +291,67 @@ impl CurlMulti {
         return Err(Error::from_reason(format!("Perform failed: {}", result)));
       }
     }
-    Ok(remaining as u32)
+    Ok(remaining)
   }
 
   #[napi]
-  pub fn get_running_handles(&self) -> Result<u32> {
+  pub async fn poll(&self, timeout_ms: i32) -> Result<i32> {
+    self.check_close()?;
+    // 只 move 原始指针
+    let handle = self.raw.handle as usize;
+    spawn_blocking(move || {
+      let mut remaining = 0;
+      unsafe {
+        let extra_fds: *mut CurlWaitFd = std::ptr::null_mut();
+        // 恢复 lib 的引用
+        let lib = napi_load_library()?;
+        let code = (lib.multi_poll)(
+          handle as CurlMultiHandle,
+          extra_fds,
+          0,
+          timeout_ms,
+          &mut remaining,
+        );
+        if code != 0 {
+          return Err(Error::from_reason(format!("failed with code: {}", code)));
+        }
+      }
+      Ok(remaining)
+    })
+    .await
+    .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
+  }
+
+  #[napi]
+  pub async fn wait(&self, timeout_ms: i32) -> Result<i32> {
+    self.check_close()?;
+    // 只 move 原始指针
+    let handle = self.raw.handle as usize;
+    spawn_blocking(move || {
+      let mut remaining = 0;
+      unsafe {
+        let extra_fds: *mut CurlWaitFd = std::ptr::null_mut();
+        // 恢复 lib 的引用
+        let lib = napi_load_library()?;
+        let code = (lib.multi_wait)(
+          handle as CurlMultiHandle,
+          extra_fds,
+          0,
+          timeout_ms,
+          &mut remaining,
+        );
+        if code != 0 {
+          return Err(Error::from_reason(format!("failed with code: {}", code)));
+        }
+      }
+      Ok(remaining)
+    })
+    .await
+    .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
+  }
+
+  #[napi]
+  pub fn get_running_handles(&self) -> Result<i32> {
     self.check_close()?;
     let mut remaining = 0;
     log_info!("CurlMulti", "Getting running handles");
@@ -306,14 +364,19 @@ impl CurlMulti {
         )));
       }
     }
-    Ok(remaining as u32)
+    Ok(remaining)
   }
 
   #[napi]
-  pub fn socket_action(&mut self, socket: i64, what: i64) -> Result<u32> {
+  pub fn socket_action(&self, socket: i64, what: i64) -> Result<i32> {
     self.check_close()?;
     let mut remaining = 0;
-    log_info!("CurlMulti", "Performing socket action: socket={}, what={}", socket, what);
+    log_info!(
+      "CurlMulti",
+      "Performing socket action: socket={}, what={}",
+      socket,
+      what
+    );
     unsafe {
       let result = (self.raw.lib.multi_socket_action)(
         self.raw.handle,
@@ -325,7 +388,7 @@ impl CurlMulti {
         return Err(Error::from_reason(format!("Action failed: {}", result)));
       }
     }
-    Ok(remaining as u32)
+    Ok(remaining)
   }
 
   #[napi]
@@ -383,9 +446,13 @@ impl CurlMulti {
     if self.closed || self.raw.handle.is_null() {
       return;
     }
-    log_info!("CurlMulti", "Closing CurlMulti handle: {}", get_ptr_address(self.raw.handle));
+    log_info!(
+      "CurlMulti",
+      "Closing CurlMulti handle: {}",
+      get_ptr_address(self.raw.handle)
+    );
     self.closed = true;
-    
+
     unsafe {
       (self.raw.lib.multi_setopt)(
         self.raw.handle,
@@ -411,7 +478,7 @@ impl CurlMulti {
 
       (self.raw.lib.multi_cleanup)(self.raw.handle);
     }
-    
+
     // 清理分配的指针
     if let Some(ptr) = self.socket_data_ptr.take() {
       unsafe { Arc::from_raw(ptr) };
@@ -419,7 +486,7 @@ impl CurlMulti {
     if let Some(ptr) = self.timer_data_ptr.take() {
       unsafe { Arc::from_raw(ptr) };
     }
-    
+
     if let Ok(mut data) = self.data.lock() {
       data.socket = Box::new(|_| {});
       data.timer = Box::new(|_| true);
@@ -460,7 +527,7 @@ extern "C" fn socket_callback(
   } else {
     0
   };
-  
+
   // 重新泄漏 Arc 避免释放内存
   std::mem::forget(data_arc);
   result
@@ -486,11 +553,15 @@ extern "C" fn timer_callback(
       multi_id: get_ptr_address(_multi),
       timeout_ms: timeout_ms as i64,
     });
-    if keep_going { 0 } else { -1 }
+    if keep_going {
+      0
+    } else {
+      -1
+    }
   } else {
     0
   };
-  
+
   // 重新泄漏 Arc 避免释放内存
   std::mem::forget(data_arc);
   result

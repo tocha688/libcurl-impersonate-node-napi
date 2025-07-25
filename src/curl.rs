@@ -1,4 +1,4 @@
-use napi::bindgen_prelude::Buffer;
+use napi::bindgen_prelude::{spawn_blocking, Buffer};
 use napi::{Error, Result, Status};
 use napi_derive::napi;
 use std::cell::UnsafeCell;
@@ -283,7 +283,7 @@ impl Curl {
   #[napi]
   pub fn set_opt_str_list(&self, option: CurlOpt, arrays: Vec<String>) -> Result<()> {
     self.check_close()?;
-     self.set_opt(option, arrays.as_ptr() as *const c_void)
+    self.set_opt(option, arrays.as_ptr() as *const c_void)
   }
 
   fn result(&self, code: i32) -> Result<()> {
@@ -406,11 +406,32 @@ impl Curl {
 
   /// 执行 curl 请求
   #[napi]
-  pub fn perform(&self) -> Result<()> {
+  pub fn perform_sync(&self) -> Result<()> {
     // 确保数据回调已初始化
     self.init();
     log_info!("Curl", "perform");
     self.result(unsafe { (self.lib.easy_perform)(self.handle) })
+  }
+  #[napi]
+  pub async fn perform(&self) -> Result<i32> {
+    // 确保数据回调已初始化
+    self.init();
+    log_info!("Curl", "perform");
+    // self.result(unsafe { (self.lib.easy_perform)(self.handle) })();
+    let handle = self.handle as usize;
+    spawn_blocking(move || {
+      unsafe {
+        // 恢复 lib 的引用
+        let lib = napi_load_library()?;
+        let code = (lib.easy_perform)(handle as CurlHandle);
+        if code != 0 {
+          return Err(Error::from_reason(format!("failed with code: {}", code)));
+        }
+        Ok(code)
+      }
+    })
+    .await
+    .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
   }
 
   /// 获取响应头数据
@@ -517,9 +538,6 @@ impl Curl {
 // 为了安全，实现 Drop trait 来确保资源正确清理
 impl Drop for Curl {
   fn drop(&mut self) {
-    if !self.handle.is_null() {
-      self.close();
-    }
+    self.close();
   }
 }
-
