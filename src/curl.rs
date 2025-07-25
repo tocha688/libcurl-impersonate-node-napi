@@ -395,7 +395,12 @@ impl Curl {
         let lib = napi_load_library()?;
         let code = (lib.easy_perform)(handle as CurlHandle);
         if code != 0 {
-          return Err(Error::from_reason(format!("failed with code: {}", code)));
+          let ptr = (lib.easy_strerror)(code);
+          let cstr = std::ffi::CStr::from_ptr(ptr);
+          return Err(Error::from_reason(format!(
+            "failed with code: {}",
+            cstr.to_string_lossy().to_string()
+          )));
         }
         Ok(code)
       }
