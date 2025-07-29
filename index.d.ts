@@ -5,14 +5,7 @@ export declare class Curl {
   constructor()
   /** 初始化数据回调 */
   init(): void
-  /** 设置单个 HTTP 头 */
-  addHeader(name: string, value: string): void
-  /** 设置原始 HTTP 头 */
-  addHeaderRaw(header: string): void
-  setHeaders(headers: Record<string, string>): void
   setHeadersRaw(headers: Array<string>): void
-  /** 清理所有 HTTP 头 */
-  clearHeaders(): void
   /** 设置字符串选项 */
   setOptString(option: CurlOpt, value: string): void
   /** 设置长整型选项 */
@@ -22,6 +15,7 @@ export declare class Curl {
   /** 传入bytes */
   setOptBytes(option: CurlOpt, body: Array<number>): void
   setOptBuffer(option: CurlOpt, body: Buffer): void
+  setBodyString(value: string): void
   setOptStrList(option: CurlOpt, arrays: Array<string>): void
   /** 获取响应码 */
   getInfoNumber(option: CurlInfo): number

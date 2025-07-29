@@ -37,7 +37,8 @@ pub struct Curl {
   lib: &'static CurlFunctions,
   header_buffer: UnsafeCell<Vec<u8>>,
   content_buffer: UnsafeCell<Vec<u8>>,
-  headers_list: UnsafeCell<Option<CurlSlist>>, // 添加 headers 列表管理
+  req_header: UnsafeCell<Option<CurlSlist>>,
+  req_body: UnsafeCell<Vec<u8>>,
 }
 
 // UnsafeCell 需要手动实现 Send 和 Sync
@@ -65,7 +66,8 @@ impl Curl {
         handle,
         header_buffer: UnsafeCell::new(Vec::new()),
         content_buffer: UnsafeCell::new(Vec::new()),
-        headers_list: UnsafeCell::new(None), // 初始化 headers 列表
+        req_header: UnsafeCell::new(None), // 初始化 headers 列表
+        req_body: UnsafeCell::new(Vec::new()),
       };
 
       Ok(curl)
@@ -134,80 +136,34 @@ impl Curl {
     Ok(())
   }
 
-  /// 设置单个 HTTP 头
-  #[napi]
-  pub fn add_header(&self, name: String, value: String) -> Result<()> {
-    let header = format!("{}: {}", name, value);
-    self.add_header_raw(header)
-  }
-
-  /// 设置原始 HTTP 头
-  #[napi]
-  pub fn add_header_raw(&self, header: String) -> Result<()> {
-    self.check_close()?;
-    let header_cstr = std::ffi::CString::new(header)
-      .map_err(|_| Error::new(Status::InvalidArg, "Invalid header string"))?;
-
-    unsafe {
-      let headers_list_ptr = self.headers_list.get();
-      let current_list = (*headers_list_ptr).unwrap_or(std::ptr::null_mut());
-
-      // 添加新的 header 到列表
-      let new_list = (self.lib.slist_append)(current_list, header_cstr.as_ptr());
-      if new_list.is_null() {
-        return Err(Error::new(
-          Status::GenericFailure,
-          "Failed to append header",
-        ));
-      }
-
-      (*headers_list_ptr) = Some(new_list);
-
-      self.set_opt(CurlOpt::HttpHeader, new_list as *const c_void)
-    }
-  }
-
-  #[napi]
-  pub fn set_headers(&self, headers: HashMap<String, String>) -> Result<()> {
-    let _ = self.clear_headers();
-    // 逐个添加 headers
-    for (name, value) in headers {
-      self.add_header(name, value)?;
-    }
-    Ok(())
-  }
-
   #[napi]
   pub fn set_headers_raw(&self, headers: Vec<String>) -> Result<()> {
-    let _ = self.clear_headers();
-    // 逐个添加 headers
-    for header in headers {
-      self.add_header_raw(header.clone())?;
-    }
-    Ok(())
-  }
-
-  /// 清理所有 HTTP 头
-  #[napi]
-  pub fn clear_headers(&self) -> Result<()> {
     self.check_close()?;
+    // 释放旧的 header 链表
     unsafe {
-      let headers_list_ptr = self.headers_list.get();
-      if let Some(headers_list) = *headers_list_ptr {
-        if !headers_list.is_null() {
-          (self.lib.slist_free_all)(headers_list);
-        }
+      if let Some(list) = *self.req_header.get() {
+        (self.lib.slist_free_all)(list);
+        *self.req_header.get() = None;
       }
-      (*headers_list_ptr) = None;
-
-      // 重置 curl 的 headers
-      (self.lib.easy_setopt)(
-        self.handle,
-        CurlOpt::HttpHeader as c_int,
-        std::ptr::null::<c_void>(),
-      );
     }
-    Ok(())
+    // 构建新的 header 链表
+    let mut current_list = std::ptr::null_mut();
+    for header in headers {
+      let header_cstr = std::ffi::CString::new(header)
+        .map_err(|_| Error::new(Status::InvalidArg, "Invalid header string"))?;
+      unsafe {
+        current_list = (self.lib.slist_append)(current_list, header_cstr.as_ptr());
+      }
+    }
+    // 保存到结构体
+    unsafe {
+      *self.req_header.get() = if current_list.is_null() {
+        None
+      } else {
+        Some(current_list)
+      };
+    }
+    self.set_opt(CurlOpt::HttpHeader, current_list as *const c_void)
   }
 
   pub fn set_opt(&self, option: CurlOpt, value: *const c_void) -> Result<()> {
@@ -249,6 +205,18 @@ impl Curl {
   #[napi]
   pub fn set_opt_buffer(&self, option: CurlOpt, body: Buffer) -> Result<()> {
     self.set_opt(option, body.as_ptr() as *const c_void)
+  }
+
+  #[napi]
+  pub fn set_body_string(&self, value: String) -> Result<()> {
+    self.check_close()?;
+    let bytes = value.into_bytes();
+    unsafe {
+      (*self.req_body.get()) = bytes.clone();
+    }
+    let buf = unsafe { &(*self.req_body.get()) };
+    self.set_opt(CurlOpt::PostFields, buf.as_ptr() as *const c_void)?;
+    self.set_opt(CurlOpt::PostFieldSize, buf.len() as *const c_void)
   }
 
   #[napi]
@@ -345,11 +313,16 @@ impl Curl {
       return;
     }
 
-    // 先清理 headers
-    let _ = self.clear_headers();
-
     log_info!("Curl", "easy_cleanup {:?}", self.id());
     unsafe {
+      // 释放 header 链表
+      if let Some(list) = *self.req_header.get() {
+        (self.lib.slist_free_all)(list);
+        *self.req_header.get() = None;
+      }
+      // 清空 body 数据
+      (*self.req_body.get()).clear();
+
       (self.lib.easy_cleanup)(self.handle);
     }
   }
@@ -362,9 +335,6 @@ impl Curl {
     unsafe {
       (*self.header_buffer.get()).clear();
       (*self.content_buffer.get()).clear();
-
-      // 清理 headers
-      let _ = self.clear_headers();
 
       (self.lib.easy_reset)(self.handle);
     }
