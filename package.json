@@ -1,6 +1,6 @@
 {
   "name": "@tocha688/libcurl",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Template project for writing node package with napi-rs",
   "main": "index.js",
   "license": "MIT",
