@@ -7,7 +7,11 @@ use napi::{bindgen_prelude::*, threadsafe_function::ThreadsafeFunction};
 use napi_derive::napi;
 
 use crate::{
-  api::curl_multi_error, constants::CurlMOpt, curl::Curl, loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle}, utils::get_ptr_address
+  api::curl_multi_error,
+  constants::CurlMOpt,
+  curl::Curl,
+  loader::{napi_load_library, CurlFunctions, CurlHandle, CurlMultiHandle},
+  utils::get_ptr_address,
 };
 use crate::{loader::CurlWaitFd, log_info};
 
@@ -113,29 +117,19 @@ impl CurlMulti {
     );
     self.result(unsafe { (self.raw.lib.multi_setopt)(self.raw.handle, option as c_int, value) })
   }
-  /// 设置字符串选项
-  #[napi]
-  pub fn set_opt_string(&self, option: CurlMOpt, value: String) -> Result<()> {
-    let c_str = std::ffi::CString::new(value).unwrap();
-    self.set_opt(option, c_str.as_ptr() as *const c_void)
-  }
 
-  /// 设置长整型选项
   #[napi]
-  pub fn set_opt_long(&self, option: CurlMOpt, value: i64) -> Result<()> {
-    self.set_opt(option, value as *const c_void)
-  }
-
-  /// 设置boolean
-  #[napi]
-  pub fn set_opt_bool(&self, option: CurlMOpt, value: bool) -> Result<()> {
-    self.set_opt(option, if value { 1 } else { 0 } as *const c_void)
-  }
-
-  /// 传入bytes
-  #[napi]
-  pub fn set_opt_bytes(&self, option: CurlMOpt, body: Vec<u8>) -> Result<()> {
-    self.set_opt(option, body.as_ptr() as *const c_void)
+  pub fn set_option(&self, option: CurlMOpt, value: Either3<String, i64, bool>) -> Result<()> {
+    match value {
+      Either3::A(string_value) => {
+        let c_str = std::ffi::CString::new(string_value).unwrap();
+        self.set_opt(option, c_str.as_ptr() as *const c_void)
+      }
+      Either3::B(long_value) => self.set_opt(option, long_value as *const c_void),
+      Either3::C(bool_value) => {
+        self.set_opt(option, if bool_value { 1 } else { 0 } as *const c_void)
+      }
+    }
   }
 
   #[napi]
@@ -306,7 +300,11 @@ impl CurlMulti {
           &mut remaining,
         );
         if code != 0 {
-          return Err(Error::from_reason(format!("failed with code: {} message: {}", code, curl_multi_error(code))));
+          return Err(Error::from_reason(format!(
+            "failed with code: {} message: {}",
+            code,
+            curl_multi_error(code)
+          )));
         }
       }
       Ok(remaining)
@@ -334,7 +332,11 @@ impl CurlMulti {
           &mut remaining,
         );
         if code != 0 {
-          return Err(Error::from_reason(format!("failed with code: {} message: {}", code, curl_multi_error(code))));
+          return Err(Error::from_reason(format!(
+            "failed with code: {} message: {}",
+            code,
+            curl_multi_error(code)
+          )));
         }
       }
       Ok(remaining)

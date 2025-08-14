@@ -6,16 +6,8 @@ export declare class Curl {
   /** 初始化数据回调 */
   init(): void
   setHeadersRaw(headers: Array<string>): void
-  /** 设置字符串选项 */
-  setOptString(option: CurlOpt, value: string): void
-  /** 设置长整型选项 */
-  setOptLong(option: CurlOpt, value: number): void
-  /** 设置boolean */
-  setOptBool(option: CurlOpt, value: boolean): void
-  /** 传入bytes */
-  setOptBytes(option: CurlOpt, body: Array<number>): void
-  setOptBuffer(option: CurlOpt, body: Buffer): void
-  setBodyString(value: string): void
+  setOption(option: CurlOpt, value: string | number | boolean): void
+  setBody(value: string | Buffer): void
   setOptStrList(option: CurlOpt, arrays: Array<string>): void
   /** 获取响应码 */
   getInfoNumber(option: CurlInfo): number
@@ -52,14 +44,7 @@ export declare class Curl {
 export declare class CurlMulti {
   closed: boolean
   constructor()
-  /** 设置字符串选项 */
-  setOptString(option: CurlMOpt, value: string): void
-  /** 设置长整型选项 */
-  setOptLong(option: CurlMOpt, value: number): void
-  /** 设置boolean */
-  setOptBool(option: CurlMOpt, value: boolean): void
-  /** 传入bytes */
-  setOptBytes(option: CurlMOpt, body: Array<number>): void
+  setOption(option: CurlMOpt, value: string | number | boolean): void
   setOptBuffer(option: CurlMOpt, body: Buffer): void
   setSocketCallback(callback: ((err: Error | null, arg: SocketData) => any)): void
   setTimerCallback(callback: ((err: Error | null, arg: TimerData) => any)): void

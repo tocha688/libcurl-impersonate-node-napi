@@ -1,8 +1,7 @@
-use napi::bindgen_prelude::{spawn_blocking, Buffer};
-use napi::{Error, Result, Status};
+use napi::bindgen_prelude::{spawn_blocking, Buffer, Either3};
+use napi::{Either, Error, Result, Status};
 use napi_derive::napi;
 use std::cell::UnsafeCell;
-use std::collections::HashMap;
 use std::os::raw::{c_char, c_int, c_long, c_void};
 
 use crate::api::curl_easy_error;
@@ -177,42 +176,37 @@ impl Curl {
     self.result(unsafe { (self.lib.easy_setopt)(self.handle, option as c_int, value) })
   }
 
-  /// 设置字符串选项
   #[napi]
-  pub fn set_opt_string(&self, option: CurlOpt, value: String) -> Result<()> {
-    let c_str = std::ffi::CString::new(value).unwrap();
-    self.set_opt(option, c_str.as_ptr() as *const c_void)
-  }
-
-  /// 设置长整型选项
-  #[napi]
-  pub fn set_opt_long(&self, option: CurlOpt, value: i64) -> Result<()> {
-    self.set_opt(option, value as *const c_void)
-  }
-
-  /// 设置boolean
-  #[napi]
-  pub fn set_opt_bool(&self, option: CurlOpt, value: bool) -> Result<()> {
-    self.set_opt(option, if value { 1 } else { 0 } as *const c_void)
-  }
-
-  /// 传入bytes
-  #[napi]
-  pub fn set_opt_bytes(&self, option: CurlOpt, body: Vec<u8>) -> Result<()> {
-    self.set_opt(option, body.as_ptr() as *const c_void)
+  pub fn set_option(&self, option: CurlOpt, value: Either3<String, i64, bool>) -> Result<()> {
+    match value {
+      Either3::A(string_value) => {
+        let c_str = std::ffi::CString::new(string_value).unwrap();
+        self.set_opt(option, c_str.as_ptr() as *const c_void)
+      }
+      Either3::B(long_value) => self.set_opt(option, long_value as *const c_void),
+      Either3::C(bool_value) => {
+        self.set_opt(option, if bool_value { 1 } else { 0 } as *const c_void)
+      }
+    }
   }
 
   #[napi]
-  pub fn set_opt_buffer(&self, option: CurlOpt, body: Buffer) -> Result<()> {
-    self.set_opt(option, body.as_ptr() as *const c_void)
-  }
-
-  #[napi]
-  pub fn set_body_string(&self, value: String) -> Result<()> {
+  pub fn set_body(&self, value: Either<String, Buffer>) -> Result<()> {
     self.check_close()?;
-    let bytes = value.into_bytes();
+
+    let bytes = match value {
+      Either::A(string_value) => {
+        // 如果是 String，转换为 bytes
+        string_value.into_bytes()
+      }
+      Either::B(buffer_value) => {
+        // 如果是 Buffer，转换为 Vec<u8>
+        buffer_value.to_vec()
+      }
+    };
+
     unsafe {
-      (*self.req_body.get()) = bytes.clone();
+      (*self.req_body.get()) = bytes;
     }
     let buf = unsafe { &(*self.req_body.get()) };
     self.set_opt(CurlOpt::PostFields, buf.as_ptr() as *const c_void)?;
