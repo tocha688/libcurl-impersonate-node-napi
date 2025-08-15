@@ -25,7 +25,7 @@ export declare class Curl {
   reset(): void
   /** 执行 curl 请求 */
   performSync(): void
-  perform(): Promise<number>
+  perform(): Promise<void>
   /** 获取响应头数据 */
   getRespHeaders(): Buffer
   /** 获取响应体数据 */

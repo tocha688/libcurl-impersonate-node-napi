@@ -344,29 +344,30 @@ impl Curl {
     self.result(unsafe { (self.lib.easy_perform)(self.handle) })
   }
   #[napi]
-  pub async fn perform(&self) -> Result<i32> {
+  pub async fn perform(&self) -> Result<()> {
     // 确保数据回调已初始化
     self.init();
     log_info!("Curl", "perform");
-    // self.result(unsafe { (self.lib.easy_perform)(self.handle) })();
-    let handle = self.handle as usize;
-    spawn_blocking(move || {
-      unsafe {
-        // 恢复 lib 的引用
-        let lib = napi_load_library()?;
-        let code = (lib.easy_perform)(handle as CurlHandle);
-        if code != 0 {
-          let error = curl_easy_error(code);
-          return Err(Error::from_reason(format!(
-            "failed with code: {} message:{}",
-            code, error
-          )));
-        }
-        Ok(code)
-      }
-    })
-    .await
-    .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
+    self.result(unsafe { (self.lib.easy_perform)(self.handle) })
+
+    // let handle = self.handle as usize;
+    // spawn_blocking(move || {
+    //   unsafe {
+    //     // 恢复 lib 的引用
+    //     let lib = napi_load_library()?;
+    //     let code = (lib.easy_perform)(handle as CurlHandle);
+    //     if code != 0 {
+    //       let error = curl_easy_error(code);
+    //       return Err(Error::from_reason(format!(
+    //         "failed with code: {} message:{}",
+    //         code, error
+    //       )));
+    //     }
+    //     Ok(code)
+    //   }
+    // })
+    // .await
+    // .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
   }
 
   /// 获取响应头数据

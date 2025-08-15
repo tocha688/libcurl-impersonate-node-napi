@@ -8,34 +8,24 @@ console.log("lib路径", getLibPath())
 globalInit(3)
 
 const curl = new Curl()
-// curl.setOptString(CurlOpt.Url, "https://tls.peet.ws/api/all")
-curl.setOptString(CurlOpt.Url, "https://www.google.com")
-curl.setOptLong(CurlOpt.SslVerifyPeer, 0)
-curl.setOptLong(CurlOpt.SslVerifyHost, 0)
+// curl.setOption(CurlOpt.Url, "https://tls.peet.ws/api/all")
+curl.setOption(CurlOpt.Url, "https://www.google.com")
+curl.setOption(CurlOpt.SslVerifyPeer, 0)
+curl.setOption(CurlOpt.SslVerifyHost, 0)
 //重定向
-curl.setOptBool(CurlOpt.FollowLocation, true)
-curl.setOptLong(CurlOpt.MaxRedirs, 10)
+curl.setOption(CurlOpt.FollowLocation, true)
+curl.setOption(CurlOpt.MaxRedirs, 10)
 //自动解码
-curl.setOptString(CurlOpt.AcceptEncoding, "")
+curl.setOption(CurlOpt.AcceptEncoding, "")
 
 curl.setCookies("testcookie=1234567890; testcookie2=999999")
 
 curl.impersonate("chrome136", true)
-curl.addHeader("h1","w1")
-curl.addHeader("h2","w1")
-// curl.setHeaders([
-//   "h1: v1",
-//   "h2: v2",
-//   "h3: v3",
-//   "h4: v4",
-//   "h5: v5",
-// ])
 
-// curl.init()
 
 console.log("Starting request...")
 
-setInterval(()=>{
+let timer = setInterval(() => {
     console.log("Request is still running...")
 }, 100)
 // 执行请求 - 同步等待完成
@@ -60,5 +50,5 @@ curl.getCookies().forEach(cookie => {
 // curl.reset();
 
 curl.close()
-
+clearInterval(timer);
 console.log("Curl instance closed.")
