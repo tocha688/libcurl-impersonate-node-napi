@@ -1,4 +1,4 @@
-use napi::bindgen_prelude::{spawn_blocking, Buffer, Either3};
+use napi::bindgen_prelude::{Buffer, Either3};
 use napi::{Either, Error, Result, Status};
 use napi_derive::napi;
 use std::cell::UnsafeCell;
@@ -348,26 +348,26 @@ impl Curl {
     // 确保数据回调已初始化
     self.init();
     log_info!("Curl", "perform");
-    self.result(unsafe { (self.lib.easy_perform)(self.handle) })
+    // self.result(unsafe { (self.lib.easy_perform)(self.handle) })
 
-    // let handle = self.handle as usize;
-    // spawn_blocking(move || {
-    //   unsafe {
-    //     // 恢复 lib 的引用
-    //     let lib = napi_load_library()?;
-    //     let code = (lib.easy_perform)(handle as CurlHandle);
-    //     if code != 0 {
-    //       let error = curl_easy_error(code);
-    //       return Err(Error::from_reason(format!(
-    //         "failed with code: {} message:{}",
-    //         code, error
-    //       )));
-    //     }
-    //     Ok(code)
-    //   }
-    // })
-    // .await
-    // .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
+    let handle = self.handle as usize;
+    tokio::task::spawn_blocking(move || {
+      unsafe {
+        // 恢复 lib 的引用
+        let lib = napi_load_library()?;
+        let code = (lib.easy_perform)(handle as CurlHandle);
+        if code != 0 {
+          let error = curl_easy_error(code);
+          return Err(Error::from_reason(format!(
+            "failed with code: {} message:{}",
+            code, error
+          )));
+        }
+        Ok(())
+      }
+    })
+    .await
+    .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
   }
 
   /// 获取响应头数据
