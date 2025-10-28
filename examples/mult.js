@@ -1,63 +1,82 @@
 const { setLibPath, getLibPath, Curl, CurlOpt, globalInit, CurlInfo, CurlMulti } = require("..")
 const path = require("path")
 
-setLibPath(path.join(process.cwd(), `/libs/x86_64-win32/bin/libcurl.dll`))
+async function main() {
+  setLibPath(path.join(process.cwd(), `/libs/x86_64-win32/bin/libcurl.dll`))
+  console.log("lib路径", getLibPath())
 
-console.log("lib路径", getLibPath())
+  globalInit(3)
 
-globalInit(3)
+  console.log("Creating curl instance...")
+  const curl = new Curl()
+  curl.init() // 初始化数据回调
+  curl.setOption(CurlOpt.Url, "https://httpbin.org/get")
+  curl.setOption(CurlOpt.SslVerifyPeer, 0)
+  curl.setOption(CurlOpt.SslVerifyHost, 0)
+  curl.impersonate("chrome136", true)
 
-console.log("Creating curl instances...")
-const curl = new Curl()
-curl.init() // 先初始化
-curl.setOptString(CurlOpt.Url, "https://httpbin.org/get")
-curl.setOptLong(CurlOpt.SslVerifyPeer, 0)
-curl.setOptLong(CurlOpt.SslVerifyHost, 0)
-curl.impersonate("chrome136", true)
+  console.log("Creating Multi instance...")
+  const multi = new CurlMulti()
 
+  // 可选：观察 socket/timer 事件
+  multi.setSocketCallback((data) => {
+    console.log("Socket:", data)
+  })
+  multi.setTimerCallback((data) => {
+    console.log("Timer:", data)
+  })
 
-console.log("Creating Multi instance...")
-const multi = new CurlMulti()
+  let timer
+  try {
+    // 添加 handle 并开始循环
+    multi.addHandle(curl)
 
-multi.setSocketCallback((data) => {
-    console.log("Socket Callback:", data)
-})
-multi.setTimerCallback((data) => {
-    console.log("Timer Callback:", data)
-})
+    console.time("ping")
+    timer = setInterval(() => {
+      console.timeLog("ping")
+    }, 200)
 
-multi.addHandle(curl)
-let remaining = multi.perform()
-console.time("ping")
-setInterval(() => {
-    console.timeLog("ping")
-}, 50)
-while (remaining > 0) {
-    const prevRemaining = remaining;
-    console.log("返回", await multi.poll(10000))
-    remaining = multi.perform()
-    console.log(`Perform: ${remaining} transfers remaining (was ${prevRemaining})`)
-    // 检查是否有传输完成
-    if (prevRemaining > remaining || remaining === 0) {
-        console.log("检查完成的传输:", remaining)
+    let remaining = multi.perform()
+    while (remaining > 0) {
+      const prevRemaining = remaining
 
-        // 持续读取所有可用的消息
-        let hasMessages = true
-        while (hasMessages) {
-            const info = multi.infoRead()
-            if (info) {
-                console.log("Info Read:", info)
-                // 处理完成的传输
-                if (info.msg === 1) { // CURLMSG_DONE
-                    console.log("传输完成，结果码:", info.data)
-                    // 可以在这里获取响应数据
-                    console.log("响应体:", curl.getRespBody())
-                }
-            } else {
-                hasMessages = false
+      // 使用 AsyncTask 风格的 wait/poll，不返回数值，因此无需打印
+      await multi.wait(100) // 或者使用 await multi.poll(100)
+
+      remaining = multi.perform()
+      console.log(`Perform: ${remaining} transfers remaining (was ${prevRemaining})`)
+
+      // 读取完成消息
+      if (prevRemaining > remaining || remaining === 0) {
+        let info
+        do {
+          info = multi.infoRead()
+          if (info) {
+            console.log("Info:", info)
+            if (info.msg === 1) { // CURLMSG_DONE
+              console.log("传输完成，结果码:", info.data)
+              console.log("状态码:", curl.status())
+              console.log("响应体长度:", curl.getRespBody().toString("utf-8"))
+              return;
             }
-        }
+          }
+        } while (info)
+      }
     }
+
+  } finally {
+    console.timeEnd("ping")
+    if (timer) clearInterval(timer)
+    // 尽量清理资源
+    try { multi.removeHandle(curl) } catch {}
+    try { multi.close() } catch {}
+    try { curl.close() } catch {}
+  }
 }
 
+// CommonJS 中不支持顶层 await，使用 main 包裹执行
+main().catch((e) => {
+  console.error("示例运行失败:", e)
+  process.exitCode = 1
+})
 

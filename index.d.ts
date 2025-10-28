@@ -54,8 +54,10 @@ export declare class CurlMulti {
   removeHandle(curl: Curl): number
   error(err: number): string
   perform(): number
-  poll(timeoutMs: number): Promise<number>
-  wait(timeoutMs: number): Promise<number>
+  /** 使用 AsyncTask 的 poll */
+  poll(timeoutMs: number): Promise<unknown>
+  /** 使用 AsyncTask 的 wait */
+  wait(timeoutMs: number): Promise<unknown>
   getRunningHandles(): number
   socketAction(socket: number, what: number): number
   infoRead(): CurlMsgResult | null
