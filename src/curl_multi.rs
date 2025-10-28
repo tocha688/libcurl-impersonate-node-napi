@@ -49,8 +49,9 @@ struct RawMulti {
 }
 
 struct MultiData {
-  socket: Box<dyn FnMut(SocketData) + Send>,
-  timer: Box<dyn FnMut(TimerData) -> bool + Send>,
+  // 直接持有 TSFN 的引用，避免额外的闭包层；需要时置为 None 以释放事件循环引用
+  socket: Option<Arc<ThreadsafeFunction<SocketData>>>,
+  timer: Option<Arc<ThreadsafeFunction<TimerData>>>,
 }
 
 // 使用 AsyncTask 封装 multi_poll 的阻塞调用
@@ -93,7 +94,6 @@ impl napi::Task for MultiPollTask {
   fn reject(&mut self, _env: napi::Env, err: Error) -> Result<Self::JsValue> {
     Err(err)
   }
-
 }
 
 // 使用 AsyncTask 封装 multi_wait 的阻塞调用
@@ -165,8 +165,8 @@ impl CurlMulti {
     let multi = Self {
       raw: Arc::new(RawMulti { handle, lib }),
       data: Arc::new(Mutex::new(MultiData {
-        socket: Box::new(|_| {}),
-        timer: Box::new(|_| true),
+        socket: None,
+        timer: None,
       })),
       closed: false,
       socket_data_ptr: None,
@@ -234,24 +234,14 @@ impl CurlMulti {
   }
 
   #[napi]
-  pub fn set_socket_callback(&mut self, callback: ThreadsafeFunction<SocketData>) -> Result<()> {
+  pub fn set_socket_callback(
+    &mut self,
+    callback: Arc<ThreadsafeFunction<SocketData>>,
+  ) -> Result<()> {
     self.check_close()?;
-    let tsfn = Arc::new(callback);
     log_info!("CurlMulti", "Setting socket callback");
     if let Ok(mut data) = self.data.lock() {
-      data.socket = Box::new(move |sdata| {
-        log_info!(
-          "CurlMulti",
-          "Socket callback: curl_id={}, sockfd={}, what={}",
-          sdata.curl_id,
-          sdata.sockfd,
-          sdata.what
-        );
-        let _ = tsfn.call(
-          Ok(sdata),
-          napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
-        );
-      });
+      data.socket = Some(callback.clone());
     }
 
     // 如果之前有设置过回调，先清理旧的指针
@@ -279,24 +269,11 @@ impl CurlMulti {
   }
 
   #[napi]
-  pub fn set_timer_callback(&mut self, callback: ThreadsafeFunction<TimerData>) -> Result<()> {
+  pub fn set_timer_callback(&mut self, callback: Arc<ThreadsafeFunction<TimerData>>) -> Result<()> {
     self.check_close()?;
-    let tsfn = Arc::new(callback);
     log_info!("CurlMulti", "Setting timer callback");
     if let Ok(mut data) = self.data.lock() {
-      data.timer = Box::new(move |tdata| {
-        log_info!(
-          "CurlMulti",
-          "Timer callback: multi_id={}, timeout_ms={}",
-          tdata.multi_id,
-          tdata.timeout_ms
-        );
-        let _ = tsfn.call(
-          Ok(tdata),
-          napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
-        );
-        true
-      });
+      data.timer = Some(callback.clone());
     }
 
     // 如果之前有设置过回调，先清理旧的指针
@@ -520,8 +497,8 @@ impl CurlMulti {
     }
 
     if let Ok(mut data) = self.data.lock() {
-      data.socket = Box::new(|_| {});
-      data.timer = Box::new(|_| true);
+      data.socket = None;
+      data.timer = None;
     }
   }
 }
@@ -545,12 +522,17 @@ extern "C" fn socket_callback(
 
   // 从原始指针重新构造 Arc，但不释放所有权
   let data_arc = unsafe { Arc::from_raw(userptr as *const Mutex<MultiData>) };
-  let result = if let Ok(mut data) = data_arc.try_lock() {
-    (data.socket)(SocketData {
-      curl_id: get_ptr_address(_easy),
-      sockfd,
-      what,
-    });
+  let result = if let Ok(data) = data_arc.try_lock() {
+    if let Some(tsfn) = &data.socket {
+      let _ = tsfn.call(
+        Ok(SocketData {
+          curl_id: get_ptr_address(_easy),
+          sockfd,
+          what,
+        }),
+        napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
+      );
+    }
     0
   } else {
     0
@@ -572,16 +554,17 @@ extern "C" fn timer_callback(
 
   // 从原始指针重新构造 Arc，但不释放所有权
   let data_arc = unsafe { Arc::from_raw(userptr as *const Mutex<MultiData>) };
-  let result = if let Ok(mut data) = data_arc.try_lock() {
-    let keep_going = (data.timer)(TimerData {
-      multi_id: get_ptr_address(_multi),
-      timeout_ms: timeout_ms as i64,
-    });
-    if keep_going {
-      0
-    } else {
-      -1
+  let result = if let Ok(data) = data_arc.try_lock() {
+    if let Some(tsfn) = &data.timer {
+      let _ = tsfn.call(
+        Ok(TimerData {
+          multi_id: get_ptr_address(_multi),
+          timeout_ms: timeout_ms as i64,
+        }),
+        napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking,
+      );
     }
+    0
   } else {
     0
   };

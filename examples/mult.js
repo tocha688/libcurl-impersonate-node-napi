@@ -19,11 +19,11 @@ async function main() {
   const multi = new CurlMulti()
 
   // 可选：观察 socket/timer 事件
-  multi.setSocketCallback((data) => {
-    console.log("Socket:", data)
+  multi.setSocketCallback((err, data) => {
+    console.log("Socket:", err, data)
   })
-  multi.setTimerCallback((data) => {
-    console.log("Timer:", data)
+  multi.setTimerCallback((err, data) => {
+    console.log("Timer:", err, data)
   })
 
   let timer
@@ -68,9 +68,9 @@ async function main() {
     console.timeEnd("ping")
     if (timer) clearInterval(timer)
     // 尽量清理资源
-    try { multi.removeHandle(curl) } catch {}
-    try { multi.close() } catch {}
-    try { curl.close() } catch {}
+    try { multi.removeHandle(curl) } catch { }
+    try { multi.close() } catch { }
+    try { curl.close() } catch { }
   }
 }
 
