@@ -2,7 +2,7 @@ use libloading::{Library, Symbol};
 use napi::{Error, Status};
 use once_cell::sync::OnceCell;
 use std::{
-  f32::consts::E, ffi::c_short, os::raw::{c_char, c_int, c_long, c_uint, c_void}
+  ffi::c_short, os::raw::{c_char, c_int, c_long, c_uint, c_void}
 };
 
 use crate::libpath::get_lib_path;

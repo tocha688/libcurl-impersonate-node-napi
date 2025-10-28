@@ -1,4 +1,4 @@
-use napi::bindgen_prelude::{Buffer, Either3};
+use napi::bindgen_prelude::{AsyncTask, Buffer, Either3};
 use napi::{Either, Error, Result, Status};
 use napi_derive::napi;
 use std::cell::UnsafeCell;
@@ -27,6 +27,39 @@ extern "C" fn write_data(
     buffer.extend_from_slice(data);
   }
   real_size
+}
+
+// 使用 AsyncTask 的执行任务结构，跨线程仅传递 usize 句柄，避免原始指针的 Send 约束
+pub struct PerformTask {
+  handle: usize,
+}
+
+impl napi::Task for PerformTask {
+  type Output = ();
+  type JsValue = ();
+
+  fn compute(&mut self) -> napi::Result<Self::Output> {
+    unsafe {
+      let lib = napi_load_library()?;
+      let code = (lib.easy_perform)(self.handle as CurlHandle);
+      if code != 0 {
+        let error = curl_easy_error(code);
+        return Err(Error::from_reason(format!(
+          "failed with code: {} message:{}",
+          code, error
+        )));
+      }
+      Ok(())
+    }
+  }
+
+  fn resolve(&mut self, _env: napi::Env, _output: Self::Output) -> napi::Result<Self::JsValue> {
+    Ok(())
+  }
+
+  fn reject(&mut self, _env: napi::Env, err: Error) -> Result<Self::JsValue> {
+    Err(err)
+  }
 }
 
 #[napi]
@@ -344,12 +377,11 @@ impl Curl {
     self.result(unsafe { (self.lib.easy_perform)(self.handle) })
   }
   #[napi]
-  pub async fn perform(&self) -> Result<()> {
+  pub async fn perform_old(&self) -> Result<()> {
     // 确保数据回调已初始化
     self.init();
     log_info!("Curl", "perform");
-    // self.result(unsafe { (self.lib.easy_perform)(self.handle) })
-
+    // 为了满足 Send 约束，跨线程仅传递整数句柄值
     let handle = self.handle as usize;
     tokio::task::spawn_blocking(move || {
       unsafe {
@@ -368,6 +400,16 @@ impl Curl {
     })
     .await
     .map_err(|e| Error::from_reason(format!("Tokio join error: {e}")))?
+  }
+
+  /// 执行 curl 请求（使用 AsyncTask）
+  #[napi]
+  pub fn perform(&self) -> Result<AsyncTask<PerformTask>> {
+    // 确保数据回调已初始化
+    self.init();
+    log_info!("Curl", "perform (AsyncTask)");
+    let handle = self.handle as usize;
+    Ok(AsyncTask::new(PerformTask { handle }))
   }
 
   /// 获取响应头数据
